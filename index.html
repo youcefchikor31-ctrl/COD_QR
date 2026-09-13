@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chikor QR Studio - Ultimate Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        
+        /* شريط ألوان متطابق 100% بدون أي انعكاس */
+        .color-spectrum {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 26px;
+            border-radius: 13px;
+            background: linear-gradient(to right, 
+                #ff0000 0%, 
+                #ffff00 17%, 
+                #00ff00 33%, 
+                #00ffff 50%, 
+                #0000ff 67%, 
+                #ff00ff 83%, 
+                #ff0000 100%
+            );
+            outline: none;
+            cursor: pointer;
+            border: 2px solid #334155;
+        }
+        .color-spectrum::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--thumb-bg, #00f2fe);
+            border: 3px solid #ffffff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);
+            transition: background 0.1s ease;
+        }
+
+        #welcome-screen {
+            animation: fadeOut 0.8s ease 2.2s forwards;
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; pointer-events: none; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 overflow-x-hidden">
+
+    <!-- شاشة الترحيب الفخمة -->
+    <div id="welcome-screen" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center text-center p-6">
+        <div class="space-y-3">
+            <h1 class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-pink-500 tracking-wider">
+                WELCOME TO WEBSITE
+            </h1>
+            <p class="text-sm sm:text-lg font-bold text-slate-300 tracking-widest uppercase">
+                DEVELOPER : <span class="text-cyan-400 font-black">CHIKOR</span>
+            </p>
+            <div class="w-20 h-1 bg-gradient-to-r from-cyan-500 to-pink-500 mx-auto rounded-full animate-pulse mt-4"></div>
+        </div>
+    </div>
+
+    <!-- الحاوية المتجاوبة للموقع -->
+    <div class="max-w-7xl w-full bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-slate-800 grid grid-cols-1 lg:grid-cols-12">
+        
+        <!-- لوحة التحكم -->
+        <div class="lg:col-span-7 p-4 sm:p-6 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar border-b lg:border-b-0 lg:border-l border-slate-800">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-cyan-400 flex items-center gap-2">
+                    <span>⚡</span> CHIKOR QR STUDIO
+                </h1>
+                <p class="text-slate-400 text-xs sm:text-sm mt-1">توليد نصوص صريحة، ألوان دقيقة، وأكثر من 200 شعار فريد.</p>
+            </div>
+
+            <!-- تبويبات البيانات الصريحة -->
+            <div class="space-y-2">
+                <label class="text-xs text-cyan-300 font-bold block">اختر نوع المحتوى:</label>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                    <button onclick="switchType('text')" id="btn-text" class="type-btn bg-cyan-600 text-white font-bold py-2.5 px-2 rounded-xl transition shadow">نص صريح 📝</button>
+                    <button onclick="switchType('url')" id="btn-url" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition">رابط 🔗</button>
+                    <button onclick="switchType('phone')" id="btn-phone" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition">رقم هاتف 📞</button>
+                    <button onclick="switchType('sms')" id="btn-sms" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition">رسالة SMS 💬</button>
+                    <button onclick="switchType('wifi')" id="btn-wifi" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition col-span-2 sm:col-span-1">واي فاي 🛜</button>
+                </div>
+            </div>
+
+            <!-- حقل الإدخال -->
+            <div id="input-container" class="space-y-2 bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
+                <label id="input-label" class="text-xs text-slate-400 font-semibold block">النص الصافي (يظهر تماماً كما تكتبه دون أي تشويه):</label>
+                <textarea id="raw-data-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none h-20" oninput="updateQRData()">أهلاً بك! هذا نص عربي سليم 100%.</textarea>
+            </div>
+
+            <!-- شريط الألوان الدقيق والمتطابق 100% -->
+            <div class="space-y-4 pt-2 border-t border-slate-800">
+                <h3 class="text-xs sm:text-sm font-bold text-cyan-300">🎨 شريط الألوان الدقيق (Color Precision):</h3>
+                
+                <!-- شريط لون الكود -->
+                <div class="space-y-2 bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-300 font-semibold">لون الباركود:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setCodeColorDirect('#000000')" class="px-2 py-0.5 bg-black text-white text-[10px] rounded border border-slate-700 font-bold">أسود</button>
+                            <button onclick="setCodeColorDirect('#FFFFFF')" class="px-2 py-0.5 bg-white text-black text-[10px] rounded border border-slate-300 font-bold">أبيض</button>
+                            <div id="code-color-preview" class="w-5 h-5 rounded-full border border-slate-600" style="background-color: #00F2FE;"></div>
+                            <span id="code-color-hex" class="font-mono text-cyan-400 font-bold">#00F2FE</span>
+                        </div>
+                    </div>
+                    <!-- تم ضبط dir="ltr" لتطابق السلايدر مع التدرج اللوني -->
+                    <div dir="ltr" class="w-full">
+                        <input type="range" min="0" max="360" value="180" id="code-hue" class="color-spectrum" oninput="applyCodeColor(this.value)">
+                    </div>
+                </div>
+
+                <!-- شريط لون الخلفية -->
+                <div class="space-y-2 bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-300 font-semibold">لون الخلفية:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setBgColorDirect('#FFFFFF')" class="px-2 py-0.5 bg-white text-black text-[10px] rounded border border-slate-300 font-bold">أبيض</button>
+                            <button onclick="setBgColorDirect('#000000')" class="px-2 py-0.5 bg-black text-white text-[10px] rounded border border-slate-700 font-bold">أسود</button>
+                            <div id="bg-color-preview" class="w-5 h-5 rounded-full border border-slate-600" style="background-color: #FFFFFF;"></div>
+                            <span id="bg-color-hex" class="font-mono text-cyan-400 font-bold">#FFFFFF</span>
+                        </div>
+                    </div>
+                    <div dir="ltr" class="w-full">
+                        <input type="range" min="0" max="360" value="0" id="bg-hue" class="color-spectrum" oninput="applyBgColor(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- أشكال النقاط والأركان -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400 block font-semibold">شكل النقاط الداخلية:</label>
+                    <select id="dot-style" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" onchange="refreshQR()">
+                        <option value="square">مربع تقليدي</option>
+                        <option value="dots">نقاط دائرية</option>
+                        <option value="extra-rounded">منحني فائق</option>
+                        <option value="classy">كلاسيكي متصل</option>
+                        <option value="rounded">دائري الأطراف</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400 block font-semibold">شكل أركان المربعات:</label>
+                    <select id="corner-style" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" onchange="refreshQR()">
+                        <option value="square">مربع حاد</option>
+                        <option value="dot">دائري كامل</option>
+                        <option value="extra-rounded">منحني فائق</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- مكتبة الشعارات -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+                <label class="text-xs text-slate-300 font-semibold block">إدارة الشعار المركزي:</label>
+                <div class="flex gap-2">
+                    <button onclick="openLogoModal()" class="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-lg">
+                        <span>🖼️</span> افتح مكتبة الـ 200+ شعار الفريد (200+ شعار كامل)
+                    </button>
+                    <button onclick="removeLogo()" class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2.5 rounded-xl text-xs hover:bg-red-500/20 transition cursor-pointer font-bold">
+                        إزالة الشعار
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم المعاينة والتحميل -->
+        <div class="lg:col-span-5 bg-slate-950 p-6 flex flex-col items-center justify-center space-y-6">
+            <div id="qr-wrapper" class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center border border-slate-800 transition-all duration-300">
+                <div id="canvas-container" class="flex items-center justify-center overflow-hidden w-[200px] h-[200px] sm:w-[220px] sm:h-[220px]"></div>
+            </div>
+
+            <div class="w-full space-y-2.5">
+                <button onclick="downloadHD()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-black py-3 px-4 rounded-2xl transition text-sm shadow-xl shadow-cyan-500/20 cursor-pointer flex items-center justify-center gap-2">
+                    <span>🚀</span> تحميل بجودة فائقة (HD PNG)
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="qrCode.download({name: 'chikor-qr', extension: 'svg'})" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3 rounded-xl transition text-xs cursor-pointer">
+                        تحميل Vector (SVG)
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3 rounded-xl transition text-xs cursor-pointer">
+                        🖨️ طباعة مباشرة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- نافذة مكتبة الشعارات (تضم أكثر من 200 شعار فريد بالكامل) -->
+    <div id="logo-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-5xl rounded-3xl p-5 sm:p-6 flex flex-col max-h-[88vh]">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-800">
+                <h3 class="text-base sm:text-lg font-bold text-cyan-400">مكتبة الـ 200+ شعار العالمية الفريدة</h3>
+                <button onclick="closeLogoModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+            <div id="logos-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2.5 py-4 overflow-y-auto custom-scrollbar flex-1"></div>
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+                <button onclick="closeLogoModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2 rounded-xl text-xs font-bold">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logoSrc = null;
+        let currentCodeColor = "#00F2FE";
+        let currentBgColor = "#FFFFFF";
+        let currentRawData = "أهلاً بك! هذا نص عربي سليم 100%.";
+
+        // دالة تحويل أي نص عربي أو رموز خاصة إلى بايتات UTF-8 نقية لكي تفهمها كاميرا ومستشعر الـ QR
+        function toUtf8(str) {
+            if (!str) return "";
+            try {
+                return unescape(encodeURIComponent(str));
+            } catch (e) {
+                return str;
+            }
+        }
+
+        // تبديل أنواع الإدخال
+        function switchType(type) {
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.className = "type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition";
+            });
+            document.getElementById(`btn-${type}`).className = "type-btn bg-cyan-600 text-white font-bold py-2.5 px-2 rounded-xl transition shadow";
+
+            const container = document.getElementById('input-container');
+            if (type === 'text') {
+                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">النص الصافي (يظهر تماماً كما تكتبه دون أي تشويه):</label><textarea id="raw-data-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none h-20" oninput="updateQRData()">أهلاً بك! هذا نص عربي سليم 100%.</textarea>`;
+            } else if (type === 'url') {
+                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">الرابط أو الموقع الإلكتروني:</label><input type="text" id="raw-data-input" value="https://github.com/youcefchikor31-ctrl" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none" oninput="updateQRData()">`;
+            } else if (type === 'phone') {
+                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">رقم الهاتف الصريح:</label><input type="text" id="raw-data-input" value="0678901234" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none" oninput="updateQRData()">`;
+            } else if (type === 'sms') {
+                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">نص رسالة الـ SMS المباشرة:</label><input type="text" id="raw-data-input" value="رسالة نصية فورية" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none" oninput="updateQRData()">`;
+            } else if (type === 'wifi') {
+                container.innerHTML = `
+                    <div class="space-y-2">
+                        <input type="text" id="wifi-ssid" placeholder="اسم شبكة الواي فاي (SSID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none" oninput="updateWifiData()">
+                        <input type="text" id="wifi-pass" placeholder="كلمة المرور" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none" oninput="updateWifiData()">
+                    </div>`;
+            }
+            updateQRData();
+        }
+
+        function updateQRData() {
+            const input = document.getElementById('raw-data-input');
+            currentRawData = input ? input.value : "";
+            qrCode.update({ data: toUtf8(currentRawData) });
+        }
+
+        function updateWifiData() {
+            const ssid = document.getElementById('wifi-ssid')?.value || "";
+            const pass = document.getElementById('wifi-pass')?.value || "";
+            currentRawData = `WIFI:S:${ssid};T:WPA;P:${pass};;`;
+            qrCode.update({ data: toUtf8(currentRawData) });
+        }
+
+        // تحويل درجات التدرج اللوني بدقة متناهية
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+        }
+
+        function applyCodeColor(hue) {
+            currentCodeColor = hslToHex(Number(hue), 100, 50);
+            document.getElementById('code-color-hex').textContent = currentCodeColor;
+            document.getElementById('code-color-preview').style.backgroundColor = currentCodeColor;
+            document.getElementById('code-hue').style.setProperty('--thumb-bg', currentCodeColor);
+            refreshQR();
+        }
+
+        function setCodeColorDirect(hex) {
+            currentCodeColor = hex;
+            document.getElementById('code-color-hex').textContent = currentCodeColor;
+            document.getElementById('code-color-preview').style.backgroundColor = currentCodeColor;
+            document.getElementById('code-hue').style.setProperty('--thumb-bg', currentCodeColor);
+            refreshQR();
+        }
+
+        function applyBgColor(hue) {
+            currentBgColor = hslToHex(Number(hue), 100, 50);
+            document.getElementById('bg-color-hex').textContent = currentBgColor;
+            document.getElementById('bg-color-preview').style.backgroundColor = currentBgColor;
+            document.getElementById('bg-hue').style.setProperty('--thumb-bg', currentBgColor);
+            refreshQR();
+        }
+
+        function setBgColorDirect(hex) {
+            currentBgColor = hex;
+            document.getElementById('bg-color-hex').textContent = currentBgColor;
+            document.getElementById('bg-color-preview').style.backgroundColor = currentBgColor;
+            document.getElementById('bg-hue').style.setProperty('--thumb-bg', currentBgColor);
+            refreshQR();
+        }
+
+        // مصفوفة متكاملة تضم أكثر من 200 شعار فريد بالكامل
+        const logosList = [
+            // منصات التواصل والتراسل (1 - 30)
+            { name: "Instagram", url: "https://cdn-icons-png.flaticon.com/512/174/174855.png" },
+            { name: "Facebook", url: "https://cdn-icons-png.flaticon.com/512/733/733547.png" },
+            { name: "GitHub", url: "https://cdn-icons-png.flaticon.com/512/25/25231.png" },
+            { name: "Snapchat", url: "https://cdn-icons-png.flaticon.com/512/3046/3046121.png" },
+            { name: "TikTok", url: "https://cdn-icons-png.flaticon.com/512/3046/3046126.png" },
+            { name: "Messenger", url: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png" },
+            { name: "YouTube", url: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png" },
+            { name: "WhatsApp", url: "https://cdn-icons-png.flaticon.com/512/733/733585.png" },
+            { name: "Twitter X", url: "https://cdn-icons-png.flaticon.com/512/5968/5968830.png" },
+            { name: "Telegram", url: "https://cdn-icons-png.flaticon.com/512/2111/2111646.png" },
+            { name: "LinkedIn", url: "https://cdn-icons-png.flaticon.com/512/174/174857.png" },
+            { name: "Discord", url: "https://cdn-icons-png.flaticon.com/512/5968/5968756.png" },
+            { name: "Reddit", url: "https://cdn-icons-png.flaticon.com/512/2111/2111589.png" },
+            { name: "Twitch", url: "https://cdn-icons-png.flaticon.com/512/2111/2111668.png" },
+            { name: "Pinterest", url: "https://cdn-icons-png.flaticon.com/512/145/145808.png" },
+            { name: "Medium", url: "https://cdn-icons-png.flaticon.com/512/2111/2111505.png" },
+            { name: "Dribbble", url: "https://cdn-icons-png.flaticon.com/512/145/145801.png" },
+            { name: "Behance", url: "https://cdn-icons-png.flaticon.com/512/145/145799.png" },
+            { name: "Tumblr", url: "https://cdn-icons-png.flaticon.com/512/733/733635.png" },
+            { name: "VKontakte", url: "https://cdn-icons-png.flaticon.com/512/733/733595.png" },
+            { name: "WeChat", url: "https://cdn-icons-png.flaticon.com/512/2111/2111394.png" },
+            { name: "Viber", url: "https://cdn-icons-png.flaticon.com/512/3670/3670067.png" },
+            { name: "Skype", url: "https://cdn-icons-png.flaticon.com/512/733/733609.png" },
+            { name: "Zoom", url: "https://cdn-icons-png.flaticon.com/512/3670/3670032.png" },
+            { name: "Slack", url: "https://cdn-icons-png.flaticon.com/512/2111/2111615.png" },
+            { name: "Quora", url: "https://cdn-icons-png.flaticon.com/512/3938/3938038.png" },
+            { name: "Flickr", url: "https://cdn-icons-png.flaticon.com/512/733/733561.png" },
+            { name: "SoundCloud", url: "https://cdn-icons-png.flaticon.com/512/145/145804.png" },
+            { name: "Vimeo", url: "https://cdn-icons-png.flaticon.com/512/174/174879.png" },
+            { name: "Line App", url: "https://cdn-icons-png.flaticon.com/512/3670/3670017.png" },
+
+            // الموسيقى والبث والألعاب (31 - 60)
+            { name: "Spotify", url: "https://cdn-icons-png.flaticon.com/512/2111/2111624.png" },
+            { name: "Netflix", url: "https://cdn-icons-png.flaticon.com/512/732/732228.png" },
+            { name: "Disney Plus", url: "https://cdn-icons-png.flaticon.com/512/825/825541.png" },
+            { name: "Prime Video", url: "https://cdn-icons-png.flaticon.com/512/5968/5968256.png" },
+            { name: "Apple Music", url: "https://cdn-icons-png.flaticon.com/512/732/732250.png" },
+            { name: "Deezer", url: "https://cdn-icons-png.flaticon.com/512/5968/5968841.png" },
+            { name: "Hulu", url: "https://cdn-icons-png.flaticon.com/512/5968/5968835.png" },
+            { name: "Crunchyroll", url: "https://cdn-icons-png.flaticon.com/512/825/825501.png" },
+            { name: "PlayStation", url: "https://cdn-icons-png.flaticon.com/512/25/25698.png" },
+            { name: "Xbox", url: "https://cdn-icons-png.flaticon.com/512/732/732239.png" },
+            { name: "Steam", url: "https://cdn-icons-png.flaticon.com/512/220/220229.png" },
+            { name: "Nintendo", url: "https://cdn-icons-png.flaticon.com/512/825/825523.png" },
+            { name: "Epic Games", url: "https://cdn-icons-png.flaticon.com/512/5968/5968819.png" },
+            { name: "Riot Games", url: "https://cdn-icons-png.flaticon.com/512/825/825547.png" },
+            { name: "Roblox", url: "https://cdn-icons-png.flaticon.com/512/825/825550.png" },
+            { name: "Minecraft", url: "https://cdn-icons-png.flaticon.com/512/825/825520.png" },
+            { name: "Origin EA", url: "https://cdn-icons-png.flaticon.com/512/825/825533.png" },
+            { name: "Blizzard", url: "https://cdn-icons-png.flaticon.com/512/825/825500.png" },
+            { name: "Ubisoft", url: "https://cdn-icons-png.flaticon.com/512/825/825555.png" },
+            { name: "Unity", url: "https://cdn-icons-png.flaticon.com/512/5968/5968388.png" },
+            { name: "Unreal Engine", url: "https://cdn-icons-png.flaticon.com/512/5968/5968393.png" },
+            { name: "Audible", url: "https://cdn-icons-png.flaticon.com/512/825/825503.png" },
+            { name: "Podcasts", url: "https://cdn-icons-png.flaticon.com/512/825/825535.png" },
+            { name: "Shazam", url: "https://cdn-icons-png.flaticon.com/512/825/825545.png" },
+            { name: "Tidal", url: "https://cdn-icons-png.flaticon.com/512/5968/5968882.png" },
+            { name: "Pandora", url: "https://cdn-icons-png.flaticon.com/512/174/174860.png" },
+            { name: "DailyMotion", url: "https://cdn-icons-png.flaticon.com/512/174/174844.png" },
+            { name: "Clubhouse", url: "https://cdn-icons-png.flaticon.com/512/4406/4406234.png" },
+            { name: "Signal", url: "https://cdn-icons-png.flaticon.com/512/3670/3670051.png" },
+            { name: "WhatsApp Biz", url: "https://cdn-icons-png.flaticon.com/512/733/733585.png" },
+
+            // الدفع والعملات والتجارة (61 - 90)
+            { name: "PayPal", url: "https://cdn-icons-png.flaticon.com/512/174/174861.png" },
+            { name: "Binance", url: "https://cdn-icons-png.flaticon.com/512/6125/6125139.png" },
+            { name: "Bitcoin", url: "https://cdn-icons-png.flaticon.com/512/5968/5968260.png" },
+            { name: "Visa", url: "https://cdn-icons-png.flaticon.com/512/196/196578.png" },
+            { name: "Mastercard", url: "https://cdn-icons-png.flaticon.com/512/196/196561.png" },
+            { name: "Stripe", url: "https://cdn-icons-png.flaticon.com/512/5968/5968382.png" },
+            { name: "Ethereum", url: "https://cdn-icons-png.flaticon.com/512/6125/6125161.png" },
+            { name: "Dogecoin", url: "https://cdn-icons-png.flaticon.com/512/6125/6125164.png" },
+            { name: "Apple Pay", url: "https://cdn-icons-png.flaticon.com/512/5968/5968279.png" },
+            { name: "Google Pay", url: "https://cdn-icons-png.flaticon.com/512/6125/6125001.png" },
+            { name: "Tether USDT", url: "https://cdn-icons-png.flaticon.com/512/6125/6125200.png" },
+            { name: "Litecoin", url: "https://cdn-icons-png.flaticon.com/512/6125/6125170.png" },
+            { name: "Cardano", url: "https://cdn-icons-png.flaticon.com/512/6125/6125145.png" },
+            { name: "Solana", url: "https://cdn-icons-png.flaticon.com/512/6125/6125189.png" },
+            { name: "Monero", url: "https://cdn-icons-png.flaticon.com/512/6125/6125175.png" },
+            { name: "Amazon", url: "https://cdn-icons-png.flaticon.com/512/5968/5968256.png" },
+            { name: "eBay", url: "https://cdn-icons-png.flaticon.com/512/888/888853.png" },
+            { name: "AliExpress", url: "https://cdn-icons-png.flaticon.com/512/825/825492.png" },
+            { name: "Shopify", url: "https://cdn-icons-png.flaticon.com/512/825/825552.png" },
+            { name: "Walmart", url: "https://cdn-icons-png.flaticon.com/512/888/888880.png" },
+            { name: "AmEx", url: "https://cdn-icons-png.flaticon.com/512/196/196539.png" },
+            { name: "Discover", url: "https://cdn-icons-png.flaticon.com/512/196/196548.png" },
+            { name: "JCB Card", url: "https://cdn-icons-png.flaticon.com/512/196/196559.png" },
+            { name: "UnionPay", url: "https://cdn-icons-png.flaticon.com/512/196/196577.png" },
+            { name: "Western Union", url: "https://cdn-icons-png.flaticon.com/512/825/825556.png" },
+            { name: "MoneyGram", url: "https://cdn-icons-png.flaticon.com/512/825/825522.png" },
+            { name: "Revolut", url: "https://cdn-icons-png.flaticon.com/512/825/825546.png" },
+            { name: "Wise Transfer", url: "https://cdn-icons-png.flaticon.com/512/825/825557.png" },
+            { name: "Cash App", url: "https://cdn-icons-png.flaticon.com/512/825/825496.png" },
+            { name: "Venmo", url: "https://cdn-icons-png.flaticon.com/512/825/825554.png" },
+
+            // أنظمة التشغيل والشركات والتقنية (91 - 120)
+            { name: "Google", url: "https://cdn-icons-png.flaticon.com/512/2991/2991148.png" },
+            { name: "Apple", url: "https://cdn-icons-png.flaticon.com/512/0/747.png" },
+            { name: "Microsoft", url: "https://cdn-icons-png.flaticon.com/512/732/732221.png" },
+            { name: "Android", url: "https://cdn-icons-png.flaticon.com/512/174/174836.png" },
+            { name: "Windows", url: "https://cdn-icons-png.flaticon.com/512/732/732225.png" },
+            { name: "Linux", url: "https://cdn-icons-png.flaticon.com/512/6124/6124995.png" },
+            { name: "Ubuntu", url: "https://cdn-icons-png.flaticon.com/512/888/888879.png" },
+            { name: "Intel", url: "https://cdn-icons-png.flaticon.com/512/888/888847.png" },
+            { name: "AMD", url: "https://cdn-icons-png.flaticon.com/512/888/888841.png" },
+            { name: "Nvidia", url: "https://cdn-icons-png.flaticon.com/512/888/888859.png" },
+            { name: "Samsung", url: "https://cdn-icons-png.flaticon.com/512/888/888873.png" },
+            { name: "Huawei", url: "https://cdn-icons-png.flaticon.com/512/888/888845.png" },
+            { name: "Xiaomi", url: "https://cdn-icons-png.flaticon.com/512/888/888881.png" },
+            { name: "Sony", url: "https://cdn-icons-png.flaticon.com/512/888/888871.png" },
+            { name: "Asus", url: "https://cdn-icons-png.flaticon.com/512/888/888843.png" },
+            { name: "Dell", url: "https://cdn-icons-png.flaticon.com/512/888/888846.png" },
+            { name: "HP", url: "https://cdn-icons-png.flaticon.com/512/888/888848.png" },
+            { name: "Lenovo", url: "https://cdn-icons-png.flaticon.com/512/888/888854.png" },
+            { name: "Acer", url: "https://cdn-icons-png.flaticon.com/512/888/888840.png" },
+            { name: "Chrome", url: "https://cdn-icons-png.flaticon.com/512/888/888844.png" },
+            { name: "Firefox", url: "https://cdn-icons-png.flaticon.com/512/888/888852.png" },
+            { name: "Safari", url: "https://cdn-icons-png.flaticon.com/512/888/888870.png" },
+            { name: "Edge", url: "https://cdn-icons-png.flaticon.com/512/888/888851.png" },
+            { name: "Opera", url: "https://cdn-icons-png.flaticon.com/512/888/888863.png" },
+            { name: "Brave", url: "https://cdn-icons-png.flaticon.com/512/825/825495.png" },
+            { name: "Tor", url: "https://cdn-icons-png.flaticon.com/512/825/825553.png" },
+            { name: "Debian", url: "https://cdn-icons-png.flaticon.com/512/888/888849.png" },
+            { name: "Fedora", url: "https://cdn-icons-png.flaticon.com/512/888/888850.png" },
+            { name: "RedHat", url: "https://cdn-icons-png.flaticon.com/512/888/888869.png" },
+            { name: "Arch Linux", url: "https://cdn-icons-png.flaticon.com/512/888/888842.png" },
+
+            // البرمجة والتطوير والأدوات (121 - 160)
+            { name: "Python", url: "https://cdn-icons-png.flaticon.com/512/5968/5968350.png" },
+            { name: "JavaScript", url: "https://cdn-icons-png.flaticon.com/512/5968/5968292.png" },
+            { name: "HTML5", url: "https://cdn-icons-png.flaticon.com/512/732/732212.png" },
+            { name: "CSS3", url: "https://cdn-icons-png.flaticon.com/512/732/732190.png" },
+            { name: "React", url: "https://cdn-icons-png.flaticon.com/512/1126/1126012.png" },
+            { name: "Node.js", url: "https://cdn-icons-png.flaticon.com/512/919/919825.png" },
+            { name: "Java", url: "https://cdn-icons-png.flaticon.com/512/226/226777.png" },
+            { name: "C Plus Plus", url: "https://cdn-icons-png.flaticon.com/512/6132/6132222.png" },
+            { name: "C Sharp", url: "https://cdn-icons-png.flaticon.com/512/6132/6132221.png" },
+            { name: "PHP", url: "https://cdn-icons-png.flaticon.com/512/919/919830.png" },
+            { name: "Swift", url: "https://cdn-icons-png.flaticon.com/512/732/732250.png" },
+            { name: "Kotlin", url: "https://cdn-icons-png.flaticon.com/512/919/919841.png" },
+            { name: "Bootstrap", url: "https://cdn-icons-png.flaticon.com/512/5968/5968672.png" },
+            { name: "Tailwind", url: "https://cdn-icons-png.flaticon.com/512/732/732190.png" },
+            { name: "Figma", url: "https://cdn-icons-png.flaticon.com/512/5968/5968705.png" },
+            { name: "Wordpress", url: "https://cdn-icons-png.flaticon.com/512/174/174881.png" },
+            { name: "Docker", url: "https://cdn-icons-png.flaticon.com/512/919/919853.png" },
+            { name: "Kubernetes", url: "https://cdn-icons-png.flaticon.com/512/6124/6124998.png" },
+            { name: "GitLab", url: "https://cdn-icons-png.flaticon.com/512/5968/5968853.png" },
+            { name: "Bitbucket", url: "https://cdn-icons-png.flaticon.com/512/5968/5968866.png" },
+            { name: "Trello", url: "https://cdn-icons-png.flaticon.com/512/2111/2111707.png" },
+            { name: "Jira", url: "https://cdn-icons-png.flaticon.com/512/5968/5968875.png" },
+            { name: "Ruby", url: "https://cdn-icons-png.flaticon.com/512/919/919842.png" },
+            { name: "Go Lang", url: "https://cdn-icons-png.flaticon.com/512/919/919832.png" },
+            { name: "Rust", url: "https://cdn-icons-png.flaticon.com/512/919/919836.png" },
+            { name: "Angular", url: "https://cdn-icons-png.flaticon.com/512/919/919839.png" },
+            { name: "Vue.js", url: "https://cdn-icons-png.flaticon.com/512/1126/1126015.png" },
+            { name: "Sass", url: "https://cdn-icons-png.flaticon.com/512/919/919831.png" },
+            { name: "Terminal", url: "https://cdn-icons-png.flaticon.com/512/1055/1055687.png" },
+            { name: "Database", url: "https://cdn-icons-png.flaticon.com/512/2906/2906274.png" },
+            { name: "Cloud Server", url: "https://cdn-icons-png.flaticon.com/512/4149/4149688.png" },
+            { name: "TypeScript", url: "https://cdn-icons-png.flaticon.com/512/5968/5968381.png" },
+            { name: "Dart", url: "https://cdn-icons-png.flaticon.com/512/5968/5968700.png" },
+            { name: "Flutter", url: "https://cdn-icons-png.flaticon.com/512/5968/5968702.png" },
+            { name: "VS Code", url: "https://cdn-icons-png.flaticon.com/512/906/906324.png" },
+            { name: "NPM", url: "https://cdn-icons-png.flaticon.com/512/5968/5968322.png" },
+            { name: "GraphQL", url: "https://cdn-icons-png.flaticon.com/512/5968/5968704.png" },
+            { name: "Canva", url: "https://cdn-icons-png.flaticon.com/512/5968/5968699.png" },
+            { name: "StackOverflow", url: "https://cdn-icons-png.flaticon.com/512/2111/2111628.png" },
+            { name: "Postman", url: "https://cdn-icons-png.flaticon.com/512/5968/5968703.png" },
+
+            // الرموز التعبيرية والأدوات الحياتية (161 - 205)
+            { name: "Heart Love", url: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
+            { name: "Star Gold", url: "https://cdn-icons-png.flaticon.com/512/1828/1828884.png" },
+            { name: "Rocket Fast", url: "https://cdn-icons-png.flaticon.com/512/1356/1356479.png" },
+            { name: "Diamond Gem", url: "https://cdn-icons-png.flaticon.com/512/3468/3468087.png" },
+            { name: "Crown King", url: "https://cdn-icons-png.flaticon.com/512/2539/2539611.png" },
+            { name: "Shield Safe", url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png" },
+            { name: "Gamepad", url: "https://cdn-icons-png.flaticon.com/512/686/686589.png" },
+            { name: "Gift Box", url: "https://cdn-icons-png.flaticon.com/512/4213/4213912.png" },
+            { name: "Trophy Cup", url: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png" },
+            { name: "Medal Badge", url: "https://cdn-icons-png.flaticon.com/512/2539/2539634.png" },
+            { name: "Fire Flame", url: "https://cdn-icons-png.flaticon.com/512/785/785116.png" },
+            { name: "Lightning", url: "https://cdn-icons-png.flaticon.com/512/565/565322.png" },
+            { name: "Lock Safe", url: "https://cdn-icons-png.flaticon.com/512/3064/3064197.png" },
+            { name: "Key Access", url: "https://cdn-icons-png.flaticon.com/512/893/893309.png" },
+            { name: "Email Mail", url: "https://cdn-icons-png.flaticon.com/512/561/561127.png" },
+            { name: "Phone Call", url: "https://cdn-icons-png.flaticon.com/512/455/455705.png" },
+            { name: "Location Pin", url: "https://cdn-icons-png.flaticon.com/512/854/854878.png" },
+            { name: "Camera Lens", url: "https://cdn-icons-png.flaticon.com/512/1042/1042339.png" },
+            { name: "Headphones", url: "https://cdn-icons-png.flaticon.com/512/727/727245.png" },
+            { name: "Video Play", url: "https://cdn-icons-png.flaticon.com/512/1179/1179069.png" },
+            { name: "Shopping Bag", url: "https://cdn-icons-png.flaticon.com/512/1170/1170678.png" },
+            { name: "Shopping Cart", url: "https://cdn-icons-png.flaticon.com/512/1170/1170576.png" },
+            { name: "Plane Travel", url: "https://cdn-icons-png.flaticon.com/512/723/723915.png" },
+            { name: "Car Drive", url: "https://cdn-icons-png.flaticon.com/512/741/741407.png" },
+            { name: "Home House", url: "https://cdn-icons-png.flaticon.com/512/25/25694.png" },
+            { name: "Building", url: "https://cdn-icons-png.flaticon.com/512/3067/3067425.png" },
+            { name: "Bank Vault", url: "https://cdn-icons-png.flaticon.com/512/2830/2830284.png" },
+            { name: "Wallet Money", url: "https://cdn-icons-png.flaticon.com/512/3037/3037247.png" },
+            { name: "Credit Card", url: "https://cdn-icons-png.flaticon.com/512/179/179410.png" },
+            { name: "Coffee Cup", url: "https://cdn-icons-png.flaticon.com/512/924/924514.png" },
+            { name: "Book Read", url: "https://cdn-icons-png.flaticon.com/512/3389/3389081.png" },
+            { name: "Graduation", url: "https://cdn-icons-png.flaticon.com/512/2436/2436636.png" },
+            { name: "Briefcase", url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png" },
+            { name: "Wrench Tool", url: "https://cdn-icons-png.flaticon.com/512/994/994930.png" },
+            { name: "Gear Setting", url: "https://cdn-icons-png.flaticon.com/512/126/126472.png" },
+            { name: "Globe Earth", url: "https://cdn-icons-png.flaticon.com/512/814/814587.png" },
+            { name: "Compass", url: "https://cdn-icons-png.flaticon.com/512/891/891448.png" },
+            { name: "Sun Bright", url: "https://cdn-icons-png.flaticon.com/512/869/869869.png" },
+            { name: "Moon Night", url: "https://cdn-icons-png.flaticon.com/512/624/624647.png" },
+            { name: "Smile Face", url: "https://cdn-icons-png.flaticon.com/512/742/742751.png" },
+            { name: "User Profile", url: "https://cdn-icons-png.flaticon.com/512/1077/1077114.png" },
+            { name: "Users Group", url: "https://cdn-icons-png.flaticon.com/512/681/681494.png" },
+            { name: "Chat Bubble", url: "https://cdn-icons-png.flaticon.com/512/1341/1341599.png" },
+            { name: "Bell Alert", url: "https://cdn-icons-png.flaticon.com/512/3607/3607271.png" },
+            { name: "Search Icon", url: "https://cdn-icons-png.flaticon.com/512/54/54481.png" }
+        ];
+
+        // تعبئة شبكة الـ 200+ شعار الفريد
+        const logosGrid = document.getElementById('logos-grid');
+        logosList.forEach((logo, index) => {
+            const btn = document.createElement('button');
+            btn.className = "bg-slate-950 border border-slate-800 hover:border-cyan-500 p-2 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer group";
+            btn.innerHTML = `
+                <img src="${logo.url}" alt="${logo.name}" class="w-6 h-6 sm:w-7 sm:h-7 object-contain group-hover:scale-110 transition">
+                <span class="text-[8px] sm:text-[9px] text-slate-400 truncate w-full text-center">${index + 1}. ${logo.name}</span>
+            `;
+            btn.onclick = () => {
+                logoSrc = logo.url;
+                refreshQR();
+                closeLogoModal();
+            };
+            logosGrid.appendChild(btn);
+        });
+
+        function openLogoModal() { document.getElementById('logo-modal').classList.remove('hidden'); }
+        function closeLogoModal() { document.getElementById('logo-modal').classList.add('hidden'); }
+        function removeLogo() { logoSrc = null; refreshQR(); }
+
+        // تهيئة محرك الباركود مع معالجة الـ UTF-8
+        const qrCode = new QRCodeStyling({
+            width: 220,
+            height: 220,
+            type: "canvas",
+            data: toUtf8(currentRawData),
+            dotsOptions: { color: currentCodeColor, type: "square" },
+            cornersSquareOptions: { color: currentCodeColor, type: "square" },
+            backgroundOptions: { color: currentBgColor },
+            imageOptions: { hideBackgroundDots: true, imageSize: 0.35, margin: 4 }
+        });
+
+        qrCode.append(document.getElementById("canvas-container"));
+
+        function refreshQR() {
+            const dotStyle = document.getElementById('dot-style').value;
+            const cornerStyle = document.getElementById('corner-style').value;
+
+            qrCode.update({
+                data: toUtf8(currentRawData),
+                dotsOptions: { color: currentCodeColor, type: dotStyle },
+                cornersSquareOptions: { color: currentCodeColor, type: cornerStyle },
+                backgroundOptions: { color: currentBgColor },
+                image: logoSrc
+            });
+        }
+
+        // تحميل فائق الدقة بدون أي تشويش
+        function downloadHD() {
+            const dotStyle = document.getElementById('dot-style').value;
+            const cornerStyle = document.getElementById('corner-style').value;
+
+            const hdQr = new QRCodeStyling({
+                width: 1200,
+                height: 1200,
+                type: "canvas",
+                data: toUtf8(currentRawData),
+                dotsOptions: { color: currentCodeColor, type: dotStyle },
+                cornersSquareOptions: { color: currentCodeColor, type: cornerStyle },
+                backgroundOptions: { color: currentBgColor },
+                image: logoSrc,
+                imageOptions: { hideBackgroundDots: true, imageSize: 0.35, margin: 18 }
+            });
+
+            hdQr.download({ name: "chikor-studio-qr-HD", extension: "png" });
+        }
+    </script>
+</body>
+</html>

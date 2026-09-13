@@ -1,23 +1,32 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chikor QR Studio - Ultimate Edition</title>
+    <title>Chikor QR Studio - Professional Edition</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QR Code Styling Engine -->
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- jsQR Library for Built-in Scanner -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
         
-        /* شريط ألوان متطابق 100% بدون أي انعكاس */
+        /* Precise LTR Color Range Sliders */
         .color-spectrum {
             -webkit-appearance: none;
             width: 100%;
-            height: 26px;
-            border-radius: 13px;
+            height: 24px;
+            border-radius: 12px;
             background: linear-gradient(to right, 
                 #ff0000 0%, 
                 #ffff00 17%, 
@@ -34,189 +43,559 @@
         .color-spectrum::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background: var(--thumb-bg, #00f2fe);
+            background: var(--thumb-color, #06b6d4);
             border: 3px solid #ffffff;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(0,0,0,0.8);
-            transition: background 0.1s ease;
+            transition: transform 0.1s ease, background-color 0.1s ease;
+        }
+        .color-spectrum::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
         }
 
+        /* Intro Welcome Screen Animation */
         #welcome-screen {
-            animation: fadeOut 0.8s ease 2.2s forwards;
+            animation: introFadeOut 0.8s ease 2.2s forwards;
         }
-        @keyframes fadeOut {
+        @keyframes introFadeOut {
             to { opacity: 0; visibility: hidden; pointer-events: none; }
+        }
+
+        /* Toast notifications */
+        .toast {
+            animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes toastSlideIn {
+            from { transform: translateY(100%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 overflow-x-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
 
-    <!-- شاشة الترحيب الفخمة -->
-    <div id="welcome-screen" class="fixed inset-0 bg-slate-950 z-50 flex flex-col items-center justify-center text-center p-6">
-        <div class="space-y-3">
-            <h1 class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-pink-500 tracking-wider">
+    <!-- الشاشة الترحيبية الفخمة -->
+    <div id="welcome-screen" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center text-center p-6">
+        <div class="space-y-4 max-w-lg">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-pink-500 p-0.5 shadow-2xl shadow-cyan-500/30 flex items-center justify-center animate-bounce">
+                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">⚡</div>
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 tracking-wider">
                 WELCOME TO WEBSITE
             </h1>
             <p class="text-sm sm:text-lg font-bold text-slate-300 tracking-widest uppercase">
-                DEVELOPER : <span class="text-cyan-400 font-black">CHIKOR</span>
+                DEVELOPER : <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 font-black">CHIKOR</span>
             </p>
-            <div class="w-20 h-1 bg-gradient-to-r from-cyan-500 to-pink-500 mx-auto rounded-full animate-pulse mt-4"></div>
+            <div class="w-24 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 mx-auto rounded-full animate-pulse mt-4"></div>
         </div>
     </div>
 
-    <!-- الحاوية المتجاوبة للموقع -->
-    <div class="max-w-7xl w-full bg-slate-900/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-slate-800 grid grid-cols-1 lg:grid-cols-12">
-        
-        <!-- لوحة التحكم -->
-        <div class="lg:col-span-7 p-4 sm:p-6 space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar border-b lg:border-b-0 lg:border-l border-slate-800">
+    <!-- شريط الرأس العلوي -->
+    <header class="w-full max-w-7xl mb-4 sm:mb-6 bg-slate-900/80 border border-slate-800 p-3 sm:p-4 rounded-2xl sm:rounded-3xl shadow-2xl backdrop-blur-md flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-black text-xl">
+                ⚡
+            </div>
             <div>
-                <h1 class="text-xl sm:text-2xl font-black text-cyan-400 flex items-center gap-2">
-                    <span>⚡</span> CHIKOR QR STUDIO
-                </h1>
-                <p class="text-slate-400 text-xs sm:text-sm mt-1">توليد نصوص صريحة، ألوان دقيقة، وأكثر من 200 شعار فريد.</p>
-            </div>
-
-            <!-- تبويبات البيانات الصريحة -->
-            <div class="space-y-2">
-                <label class="text-xs text-cyan-300 font-bold block">اختر نوع المحتوى:</label>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                    <button onclick="switchType('text')" id="btn-text" class="type-btn bg-cyan-600 text-white font-bold py-2.5 px-2 rounded-xl transition shadow">نص صريح 📝</button>
-                    <button onclick="switchType('url')" id="btn-url" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition">رابط 🔗</button>
-                    <button onclick="switchType('phone')" id="btn-phone" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition">رقم هاتف 📞</button>
-                    <button onclick="switchType('sms')" id="btn-sms" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition">رسالة SMS 💬</button>
-                    <button onclick="switchType('wifi')" id="btn-wifi" class="type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition col-span-2 sm:col-span-1">واي فاي 🛜</button>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg sm:text-xl font-black tracking-wide text-white">CHIKOR QR STUDIO</h1>
+                    <span class="text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-bold">PRO V3.5</span>
                 </div>
-            </div>
-
-            <!-- حقل الإدخال -->
-            <div id="input-container" class="space-y-2 bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
-                <label id="input-label" class="text-xs text-slate-400 font-semibold block">النص الصافي (يظهر تماماً كما تكتبه دون أي تشويه):</label>
-                <textarea id="raw-data-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none h-20" oninput="updateQRData()">أهلاً بك! هذا نص عربي سليم 100%.</textarea>
-            </div>
-
-            <!-- شريط الألوان الدقيق والمتطابق 100% -->
-            <div class="space-y-4 pt-2 border-t border-slate-800">
-                <h3 class="text-xs sm:text-sm font-bold text-cyan-300">🎨 شريط الألوان الدقيق (Color Precision):</h3>
-                
-                <!-- شريط لون الكود -->
-                <div class="space-y-2 bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-300 font-semibold">لون الباركود:</span>
-                        <div class="flex items-center gap-2">
-                            <button onclick="setCodeColorDirect('#000000')" class="px-2 py-0.5 bg-black text-white text-[10px] rounded border border-slate-700 font-bold">أسود</button>
-                            <button onclick="setCodeColorDirect('#FFFFFF')" class="px-2 py-0.5 bg-white text-black text-[10px] rounded border border-slate-300 font-bold">أبيض</button>
-                            <div id="code-color-preview" class="w-5 h-5 rounded-full border border-slate-600" style="background-color: #00F2FE;"></div>
-                            <span id="code-color-hex" class="font-mono text-cyan-400 font-bold">#00F2FE</span>
-                        </div>
-                    </div>
-                    <!-- تم ضبط dir="ltr" لتطابق السلايدر مع التدرج اللوني -->
-                    <div dir="ltr" class="w-full">
-                        <input type="range" min="0" max="360" value="180" id="code-hue" class="color-spectrum" oninput="applyCodeColor(this.value)">
-                    </div>
-                </div>
-
-                <!-- شريط لون الخلفية -->
-                <div class="space-y-2 bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-300 font-semibold">لون الخلفية:</span>
-                        <div class="flex items-center gap-2">
-                            <button onclick="setBgColorDirect('#FFFFFF')" class="px-2 py-0.5 bg-white text-black text-[10px] rounded border border-slate-300 font-bold">أبيض</button>
-                            <button onclick="setBgColorDirect('#000000')" class="px-2 py-0.5 bg-black text-white text-[10px] rounded border border-slate-700 font-bold">أسود</button>
-                            <div id="bg-color-preview" class="w-5 h-5 rounded-full border border-slate-600" style="background-color: #FFFFFF;"></div>
-                            <span id="bg-color-hex" class="font-mono text-cyan-400 font-bold">#FFFFFF</span>
-                        </div>
-                    </div>
-                    <div dir="ltr" class="w-full">
-                        <input type="range" min="0" max="360" value="0" id="bg-hue" class="color-spectrum" oninput="applyBgColor(this.value)">
-                    </div>
-                </div>
-            </div>
-
-            <!-- أشكال النقاط والأركان -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                <div class="space-y-1">
-                    <label class="text-xs text-slate-400 block font-semibold">شكل النقاط الداخلية:</label>
-                    <select id="dot-style" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" onchange="refreshQR()">
-                        <option value="square">مربع تقليدي</option>
-                        <option value="dots">نقاط دائرية</option>
-                        <option value="extra-rounded">منحني فائق</option>
-                        <option value="classy">كلاسيكي متصل</option>
-                        <option value="rounded">دائري الأطراف</option>
-                    </select>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-xs text-slate-400 block font-semibold">شكل أركان المربعات:</label>
-                    <select id="corner-style" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" onchange="refreshQR()">
-                        <option value="square">مربع حاد</option>
-                        <option value="dot">دائري كامل</option>
-                        <option value="extra-rounded">منحني فائق</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- مكتبة الشعارات -->
-            <div class="space-y-2 pt-2 border-t border-slate-800">
-                <label class="text-xs text-slate-300 font-semibold block">إدارة الشعار المركزي:</label>
-                <div class="flex gap-2">
-                    <button onclick="openLogoModal()" class="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-lg">
-                        <span>🖼️</span> افتح مكتبة الـ 200+ شعار الفريد (200+ شعار كامل)
-                    </button>
-                    <button onclick="removeLogo()" class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2.5 rounded-xl text-xs hover:bg-red-500/20 transition cursor-pointer font-bold">
-                        إزالة الشعار
-                    </button>
-                </div>
+                <p class="text-[11px] sm:text-xs text-slate-400">المنصة الاحترافية المتكاملة لتوليد وفحص وتخصيص رموز QR العالمية</p>
             </div>
         </div>
 
-        <!-- قسم المعاينة والتحميل -->
-        <div class="lg:col-span-5 bg-slate-950 p-6 flex flex-col items-center justify-center space-y-6">
-            <div id="qr-wrapper" class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center border border-slate-800 transition-all duration-300">
-                <div id="canvas-container" class="flex items-center justify-center overflow-hidden w-[200px] h-[200px] sm:w-[220px] sm:h-[220px]"></div>
+        <div class="flex items-center gap-2">
+            <!-- زر فتح الماسح المدمج -->
+            <button onclick="openScannerModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 hover:border-cyan-500/50 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md">
+                <span>🔍</span> <span class="hidden sm:inline">فاحص الرموز</span> (Scanner)
+            </button>
+            <!-- زر فتح سجل المحفوظات -->
+            <button onclick="openHistoryDrawer()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-purple-500/50 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md">
+                <span>📁</span> <span class="hidden sm:inline">سجل المحفوظات</span>
+                <span id="history-badge-count" class="bg-purple-500/30 text-purple-300 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- الحاوية الأساسية للعمل والتخصيص -->
+    <main class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+        
+        <!-- العمود الأيمن (لوحة التحكم الشاملة - 7 أعمدة) -->
+        <div class="lg:col-span-7 space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar pr-0.5 pl-0.5">
+            
+            <!-- 1. أنواع البيانات المدعومة بالكامل -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl backdrop-blur">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs sm:text-sm font-bold text-cyan-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        نوع البيانات والمحتوى (Data Types)
+                    </h2>
+                    <span class="text-[10px] text-slate-500 font-mono">UTF-8 Clean Arabic</span>
+                </div>
+
+                <!-- شريط التبويبات المكتمل لكافة الأنواع -->
+                <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5 text-xs font-bold">
+                    <button onclick="switchContentType('text')" id="tab-text" class="type-tab-btn bg-cyan-500 text-slate-950 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>📝</span> نص صريح
+                    </button>
+                    <button onclick="switchContentType('url')" id="tab-url" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>🔗</span> رابط Web
+                    </button>
+                    <button onclick="switchContentType('phone')" id="tab-phone" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>📞</span> هاتف
+                    </button>
+                    <button onclick="switchContentType('sms')" id="tab-sms" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>💬</span> رسالة SMS
+                    </button>
+                    <button onclick="switchContentType('wifi')" id="tab-wifi" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>🛜</span> واي فاي
+                    </button>
+                    <button onclick="switchContentType('vcard')" id="tab-vcard" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>📇</span> بطاقة vCard
+                    </button>
+                    <button onclick="switchContentType('location')" id="tab-location" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>📍</span> موقع
+                    </button>
+                    <button onclick="switchContentType('event')" id="tab-event" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1">
+                        <span>📅</span> حدث تقويم
+                    </button>
+                    <button onclick="switchContentType('email')" id="tab-email" class="type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1 col-span-3 sm:col-span-1">
+                        <span>📧</span> إيميل
+                    </button>
+                </div>
+
+                <!-- حاوية الحقول المتغيرة تلقائياً -->
+                <div id="dynamic-fields-container" class="mt-4 pt-3 border-t border-slate-800/80 space-y-3">
+                    <!-- سيتم حقن الحقول هنا برمجياً -->
+                </div>
             </div>
 
-            <div class="w-full space-y-2.5">
-                <button onclick="downloadHD()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-black py-3 px-4 rounded-2xl transition text-sm shadow-xl shadow-cyan-500/20 cursor-pointer flex items-center justify-center gap-2">
-                    <span>🚀</span> تحميل بجودة فائقة (HD PNG)
+            <!-- 2. منظومة الألوان والتدرجات اللونية الفائقة الدقة -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl backdrop-blur">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs sm:text-sm font-bold text-cyan-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        الألوان والتدرجات (Color & Gradients)
+                    </h2>
+                    
+                    <!-- التبديل بين لون أحادي أو تدرج لوني -->
+                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+                        <button onclick="setColorMode('solid')" id="btn-mode-solid" class="px-2.5 py-1 rounded-lg bg-cyan-500 text-slate-950 transition">لون أحادي</button>
+                        <button onclick="setColorMode('gradient')" id="btn-mode-gradient" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">تدرج Gradient</button>
+                    </div>
+                </div>
+
+                <div class="space-y-3.5">
+                    <!-- اللون الأول (الرئيسي) -->
+                    <div class="bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80 space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-300 font-semibold" id="label-color1">لون الباركود الأساسي:</span>
+                            <div class="flex items-center gap-2">
+                                <div id="preview-color1" class="w-5 h-5 rounded-full border border-slate-600 shadow-sm" style="background-color: #06b6d4;"></div>
+                                <span id="hex-color1" class="font-mono text-cyan-400 font-bold">#06B6D4</span>
+                            </div>
+                        </div>
+                        <div dir="ltr" class="w-full">
+                            <input type="range" min="0" max="360" value="188" id="slider-color1" class="color-spectrum" oninput="handleColor1Input(this.value)">
+                        </div>
+                        <!-- أزرار ألوان سريعة للون الأول -->
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button onclick="setQuickColor1('#000000')" class="px-2 py-0.5 bg-black text-white text-[10px] rounded-lg border border-slate-700">أسود</button>
+                            <button onclick="setQuickColor1('#ffffff')" class="px-2 py-0.5 bg-white text-black text-[10px] rounded-lg border border-slate-300 font-bold">أبيض</button>
+                            <button onclick="setQuickColor1('#06b6d4')" class="px-2 py-0.5 bg-cyan-500 text-slate-950 text-[10px] rounded-lg font-bold">سيان</button>
+                            <button onclick="setQuickColor1('#8b5cf6')" class="px-2 py-0.5 bg-purple-500 text-white text-[10px] rounded-lg font-bold">بنفسجي</button>
+                            <button onclick="setQuickColor1('#ec4899')" class="px-2 py-0.5 bg-pink-500 text-white text-[10px] rounded-lg font-bold">وردي</button>
+                            <button onclick="setQuickColor1('#eab308')" class="px-2 py-0.5 bg-yellow-500 text-slate-950 text-[10px] rounded-lg font-bold">ذهبي</button>
+                            <button onclick="setQuickColor1('#22c55e')" class="px-2 py-0.5 bg-green-500 text-white text-[10px] rounded-lg font-bold">أخضر نيون</button>
+                        </div>
+                    </div>
+
+                    <!-- اللون الثاني (خاص بالتدرج فقط) -->
+                    <div id="gradient-controls-wrapper" class="bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80 space-y-2 hidden">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-300 font-semibold">اللون الثانوي للتدرج:</span>
+                            <div class="flex items-center gap-2">
+                                <div id="preview-color2" class="w-5 h-5 rounded-full border border-slate-600 shadow-sm" style="background-color: #8b5cf6;"></div>
+                                <span id="hex-color2" class="font-mono text-purple-400 font-bold">#8B5CF6</span>
+                            </div>
+                        </div>
+                        <div dir="ltr" class="w-full">
+                            <input type="range" min="0" max="360" value="265" id="slider-color2" class="color-spectrum" oninput="handleColor2Input(this.value)">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">نوع التدرج:</label>
+                                <select id="gradient-type-select" onchange="triggerQRUpdate()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-1.5 text-xs text-white outline-none">
+                                    <option value="linear">خطي مستقيم (Linear)</option>
+                                    <option value="radial">دائري من المنتصف (Radial)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">زاوية التدرج (دوران):</label>
+                                <input type="range" min="0" max="360" value="45" id="gradient-rotation" class="w-full accent-cyan-500 cursor-pointer" oninput="triggerQRUpdate()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- لون الخلفية -->
+                    <div class="bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80 space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-300 font-semibold">لون الخلفية (Background):</span>
+                            <div class="flex items-center gap-2">
+                                <div id="preview-bg" class="w-5 h-5 rounded-full border border-slate-600 shadow-sm" style="background-color: #ffffff;"></div>
+                                <span id="hex-bg" class="font-mono text-slate-300 font-bold">#FFFFFF</span>
+                            </div>
+                        </div>
+                        <div dir="ltr" class="w-full">
+                            <input type="range" min="0" max="360" value="0" id="slider-bg" class="color-spectrum" oninput="handleBgInput(this.value)">
+                        </div>
+                        <div class="flex items-center justify-between pt-1">
+                            <div class="flex gap-1.5">
+                                <button onclick="setQuickBg('#ffffff')" class="px-2.5 py-0.5 bg-white text-black text-[10px] rounded-lg border border-slate-300 font-bold">أبيض نقي</button>
+                                <button onclick="setQuickBg('#000000')" class="px-2.5 py-0.5 bg-black text-white text-[10px] rounded-lg border border-slate-700 font-bold">أسود داكن</button>
+                                <button onclick="setQuickBg('#0f172a')" class="px-2.5 py-0.5 bg-slate-900 text-cyan-400 text-[10px] rounded-lg border border-slate-700 font-bold">كحلي</button>
+                            </div>
+                            <label class="text-[11px] text-slate-400 flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" id="bg-transparent-toggle" onchange="handleTransparentBg(this.checked)" class="rounded bg-slate-900 border-slate-700 text-cyan-500">
+                                <span>خلفية شفافة (Transparent)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. الأنماط الهندسية والأشكال ومستوى تصحيح الخطأ -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl backdrop-blur">
+                <h2 class="text-xs sm:text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    الأشكال الهندسية وتصحيح الخطأ (Shapes & Safety)
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="text-slate-400 block mb-1">شكل النقاط الداخلية (Dots):</label>
+                        <select id="select-dots-type" onchange="triggerQRUpdate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500">
+                            <option value="square">مربع تقليدي حاد</option>
+                            <option value="dots">نقاط دائرية حقيقية</option>
+                            <option value="extra-rounded">أطراف دائرية فائقة</option>
+                            <option value="classy">كلاسيكي متصل</option>
+                            <option value="classy-rounded">كلاسيكي دائري</option>
+                            <option value="rounded">منحني الأطراف</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-slate-400 block mb-1">إطار الأركان الثلاثة (Corners Square):</label>
+                        <select id="select-corners-square" onchange="triggerQRUpdate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500">
+                            <option value="square">مربع قياسي</option>
+                            <option value="dot">دائري بالكامل</option>
+                            <option value="extra-rounded">دائري الأطراف فائق</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-slate-400 block mb-1">مركز الأركان (Corners Dot):</label>
+                        <select id="select-corners-dot" onchange="triggerQRUpdate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500">
+                            <option value="square">مربع</option>
+                            <option value="dot">نقطة دائرية</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-slate-400 block mb-1">مستوى تصحيح الخطأ (Error Correction):</label>
+                        <select id="select-error-level" onchange="triggerQRUpdate()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-cyan-500">
+                            <option value="H" selected>فائق القوة High (30% - الأفضل للشعارات)</option>
+                            <option value="Q">عالي Quartile (25%)</option>
+                            <option value="M">متوسط Medium (15%)</option>
+                            <option value="L">منخفض Low (7%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. الشعار والعلامة المائية (200+ شعار ورفع الشعار الشخصي) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl backdrop-blur space-y-3.5">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs sm:text-sm font-bold text-cyan-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        الشعار والعلامة التجارية (Logo & Branding)
+                    </h2>
+                    <span id="active-logo-indicator" class="text-[10px] text-slate-500">لا يوجد شعار محدد</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button onclick="openLogosModal()" class="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
+                        <span>🖼️</span> افتح مكتبة الـ 200+ شعار الفريد
+                    </button>
+                    <button onclick="removeLogo()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                        <span>❌</span> إزالة الشعار بالكامل
+                    </button>
+                </div>
+
+                <!-- خيار رفع شعار شخصي من جهاز المستخدم -->
+                <div class="bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+                    <label class="text-xs text-slate-300 font-semibold block mb-1.5">أو ارفع شعارك الخاص من الهاتف أو الكمبيوتر:</label>
+                    <input type="file" id="custom-logo-input" accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-cyan-500 file:text-slate-950 hover:file:bg-cyan-400 cursor-pointer bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                </div>
+
+                <!-- سلايدر حجم وهوامش الشعار -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+                    <div>
+                        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                            <span>حجم الشعار:</span>
+                            <span id="logo-size-val" class="font-mono text-cyan-400">35%</span>
+                        </div>
+                        <input type="range" min="15" max="45" value="35" id="slider-logo-size" class="w-full accent-cyan-500 cursor-pointer" oninput="handleLogoSize(this.value)">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                            <span>هامش الأمان حول الشعار:</span>
+                            <span id="logo-margin-val" class="font-mono text-cyan-400">5px</span>
+                        </div>
+                        <input type="range" min="0" max="20" value="5" id="slider-logo-margin" class="w-full accent-cyan-500 cursor-pointer" oninput="handleLogoMargin(this.value)">
+                    </div>
+                    <div class="col-span-1 sm:col-span-2 pt-1 flex items-center justify-between">
+                        <label class="text-[11px] text-slate-300 flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="clear-dots-behind-logo" checked onchange="triggerQRUpdate()" class="rounded bg-slate-900 border-slate-700 text-cyan-500">
+                            <span>إفراغ النقاط خلف الشعار تلقائياً (Hide Background Dots)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- العمود الأيسر (المعاينة الحية، قوالب Mockups الواقعية، والتصدير - 5 أعمدة) -->
+        <div class="lg:col-span-5 space-y-4">
+            
+            <!-- حاوية المعاينة مع مبدل القوالب الواقعية -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl backdrop-blur flex flex-col items-center">
+                <div class="w-full flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <span>👁️</span> المعاينة الحية (Live Mockup)
+                    </h3>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">محدث لحظياً</span>
+                </div>
+
+                <!-- مبدل القوالب الواقعية (Standard / Business Card / Table Stand / Wall Poster) -->
+                <div class="w-full flex p-1 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-bold mb-4 overflow-x-auto custom-scrollbar">
+                    <button onclick="setMockupView('standard')" id="btn-mockup-standard" class="flex-1 py-1.5 px-2 rounded-lg bg-cyan-500 text-slate-950 transition whitespace-nowrap">عادي (Clean)</button>
+                    <button onclick="setMockupView('card')" id="btn-mockup-card" class="flex-1 py-1.5 px-2 rounded-lg text-slate-400 hover:text-white transition whitespace-nowrap">بطاقة عمل (Card)</button>
+                    <button onclick="setMockupView('table')" id="btn-mockup-table" class="flex-1 py-1.5 px-2 rounded-lg text-slate-400 hover:text-white transition whitespace-nowrap">طاولة مطعم (Stand)</button>
+                    <button onclick="setMockupView('poster')" id="btn-mockup-poster" class="flex-1 py-1.5 px-2 rounded-lg text-slate-400 hover:text-white transition whitespace-nowrap">ملصق جداري</button>
+                </div>
+
+                <!-- مسرح المعاينة المتغير -->
+                <div id="mockup-stage" class="w-full flex items-center justify-center p-2 transition-all duration-300">
+                    <!-- القالب القياسي الافتراضي -->
+                    <div id="wrapper-standard" class="bg-white p-5 rounded-3xl shadow-2xl flex flex-col items-center border border-slate-300/30 transition-all duration-300">
+                        <div id="canvas-mount-point" class="flex items-center justify-center"></div>
+                        <div id="frame-text-display" class="mt-3 font-bold text-slate-900 text-xs tracking-widest uppercase hidden">SCAN ME</div>
+                    </div>
+
+                    <!-- قالب بطاقة العمل الفخمة (Business Card Mockup) -->
+                    <div id="wrapper-card" class="hidden w-full max-w-sm bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-5 rounded-2xl border-2 border-amber-400/30 shadow-2xl relative overflow-hidden text-right">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-xs font-black text-amber-400 tracking-wider">CHIKOR STUDIO</div>
+                                <div class="text-[10px] text-slate-400">Creative Lead & Technology</div>
+                            </div>
+                            <div class="text-amber-400 text-lg">✦</div>
+                        </div>
+                        <div class="mt-5 flex items-center justify-between gap-3">
+                            <div class="space-y-1 text-[10px] text-slate-300">
+                                <p class="font-bold text-white text-xs">يوسف شيكور (Youcef Chikor)</p>
+                                <p>📞 +213 555 00 00 00</p>
+                                <p>📧 contact@chikor.studio</p>
+                                <p class="text-cyan-400 font-mono">www.chikor.studio</p>
+                            </div>
+                            <div id="canvas-card-dest" class="w-20 h-20 bg-white p-1 rounded-xl shadow-inner flex items-center justify-center"></div>
+                        </div>
+                    </div>
+
+                    <!-- قالب ستاند طاولة المطعم (Restaurant Table Stand) -->
+                    <div id="wrapper-table" class="hidden flex flex-col items-center">
+                        <div class="w-48 bg-slate-900 border-2 border-cyan-500/40 rounded-t-3xl p-4 shadow-2xl flex flex-col items-center text-center">
+                            <div class="text-xs font-black text-cyan-400 uppercase tracking-widest mb-1">🍽️ القائمة الرقمية</div>
+                            <p class="text-[9px] text-slate-400 mb-3">امسح الرمز لفتح قائمة الطعام</p>
+                            <div id="canvas-table-dest" class="w-28 h-28 bg-white p-1.5 rounded-xl flex items-center justify-center shadow-lg"></div>
+                            <div class="mt-2 text-[10px] font-bold text-slate-200">Table #12</div>
+                        </div>
+                        <div class="w-56 h-3 bg-amber-900 rounded-b-xl shadow-xl border-t border-amber-700"></div>
+                    </div>
+
+                    <!-- قالب الملصق الجداري (Wall Poster Mockup) -->
+                    <div id="wrapper-poster" class="hidden w-52 bg-slate-950 p-3 rounded-2xl border-4 border-slate-800 shadow-2xl flex flex-col items-center text-center">
+                        <div class="text-[11px] font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-cyan-400 tracking-wider mb-2">SCAN & CONNECT</div>
+                        <div id="canvas-poster-dest" class="w-36 h-36 bg-white p-2 rounded-xl flex items-center justify-center shadow-inner"></div>
+                        <div class="mt-2 text-[9px] text-slate-400">Powered by Chikor QR Studio</div>
+                    </div>
+                </div>
+
+                <!-- خيار إطار الـ Scan Me السريع -->
+                <div class="w-full mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                    <label class="text-slate-400 flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="toggle-frame" onchange="toggleFrameDisplay(this.checked)" class="rounded bg-slate-950 border-slate-700 text-cyan-500">
+                        <span>إضافة شريط SCAN ME</span>
+                    </label>
+                    <input type="text" id="frame-text-input" value="SCAN ME" oninput="handleFrameTextInput(this.value)" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-white outline-none w-28 text-center font-bold">
+                </div>
+            </div>
+
+            <!-- أزرار التصدير والتحميل والنسخ -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl backdrop-blur space-y-3">
+                <button onclick="downloadHD()" class="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black py-3 px-4 rounded-2xl transition text-sm shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>🚀</span> تحميل صورة فائقة الدقة (HD PNG 1200px)
                 </button>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="qrCode.download({name: 'chikor-qr', extension: 'svg'})" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3 rounded-xl transition text-xs cursor-pointer">
-                        تحميل Vector (SVG)
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="downloadVectorSVG()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2.5 px-2 rounded-xl transition text-xs flex flex-col items-center justify-center gap-1 cursor-pointer">
+                        <span class="text-sm">📐</span>
+                        <span>Vector SVG</span>
                     </button>
-                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 px-3 rounded-xl transition text-xs cursor-pointer">
-                        🖨️ طباعة مباشرة
+                    <button onclick="copyQRToClipboard()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2.5 px-2 rounded-xl transition text-xs flex flex-col items-center justify-center gap-1 cursor-pointer">
+                        <span class="text-sm">📋</span>
+                        <span>نسخ الصورة</span>
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2.5 px-2 rounded-xl transition text-xs flex flex-col items-center justify-center gap-1 cursor-pointer">
+                        <span class="text-sm">🖨️</span>
+                        <span>طباعة</span>
                     </button>
                 </div>
             </div>
+
         </div>
 
-    </div>
+    </main>
 
-    <!-- نافذة مكتبة الشعارات (تضم أكثر من 200 شعار فريد بالكامل) -->
-    <div id="logo-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-5xl rounded-3xl p-5 sm:p-6 flex flex-col max-h-[88vh]">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-800">
-                <h3 class="text-base sm:text-lg font-bold text-cyan-400">مكتبة الـ 200+ شعار العالمية الفريدة</h3>
-                <button onclick="closeLogoModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+    <!-- نافذة مكتبة الـ 200+ شعار الفريد بدون تكرار -->
+    <div id="logos-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-5xl rounded-3xl p-4 sm:p-6 flex flex-col max-h-[88vh] shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-cyan-400">مكتبة الـ 200+ شعار العالمية الفريدة (بدون أي تكرار)</h3>
+                    <p class="text-[11px] text-slate-400">اضغط على أي أيقونة لوضعها فوراً بمركز الـ QR</p>
+                </div>
+                <button onclick="closeLogosModal()" class="text-slate-400 hover:text-white text-2xl font-bold p-1">&times;</button>
             </div>
-            <div id="logos-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2.5 py-4 overflow-y-auto custom-scrollbar flex-1"></div>
-            <div class="pt-4 border-t border-slate-800 flex justify-end">
-                <button onclick="closeLogoModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2 rounded-xl text-xs font-bold">إغلاق</button>
+
+            <!-- شريط بحث فوري داخل الشعارات -->
+            <div class="mt-3 mb-2">
+                <input type="text" id="logo-search-input" oninput="filterLogos(this.value)" placeholder="ابحث عن اسم الشعار (مثال: Instagram, Bitcoin, Google...)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-cyan-500 outline-none">
+            </div>
+
+            <!-- شبكة الشعارات -->
+            <div id="logos-grid-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 py-3 overflow-y-auto custom-scrollbar flex-1">
+                <!-- يتم التوليد عبر الجافاسكربت -->
+            </div>
+
+            <div class="pt-3 border-t border-slate-800 flex justify-end">
+                <button onclick="closeLogosModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 py-2 rounded-xl text-xs">إغلاق النافذة</button>
             </div>
         </div>
     </div>
+
+    <!-- نافذة فاحص وماسح الأكواد المدمج (Built-in QR Scanner / Tester) -->
+    <div id="scanner-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-5 sm:p-6 flex flex-col shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 class="text-sm sm:text-base font-bold text-cyan-400 flex items-center gap-2">
+                    <span>🔍</span> فاحص وقارئ الرموز المدمج (QR Scanner)
+                </h3>
+                <button onclick="closeScannerModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+
+            <div class="py-4 space-y-3">
+                <p class="text-xs text-slate-300">ارفع أي صورة رمز استجابة سريعة (QR) لاختبار قراءتها فوراً وفك شفرتها على نفس المتصفح دون الحاجة لهاتف آخر:</p>
+                
+                <input type="file" id="scanner-file-input" accept="image/*" onchange="processQRImage(this)" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-cyan-500 file:text-slate-955 hover:file:bg-cyan-400 cursor-pointer bg-slate-950 p-2 rounded-xl border border-slate-800">
+
+                <div id="scanner-result-box" class="bg-slate-950 p-3 rounded-2xl border border-slate-800 min-h-[100px] flex flex-col justify-center">
+                    <p class="text-slate-500 text-xs text-center" id="scanner-status">بانتظار رفع الصورة...</p>
+                    <div id="scanner-content" class="hidden space-y-2">
+                        <span class="text-[10px] text-cyan-400 font-bold uppercase">النتيجة المفكوكة بنجاح:</span>
+                        <div id="scanner-text-output" class="bg-slate-900 p-2.5 rounded-xl font-mono text-xs text-emerald-400 break-all select-all"></div>
+                        <div class="flex gap-2">
+                            <button onclick="copyScannerOutput()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition">نسخ النص</button>
+                            <button onclick="importScannerToStudio()" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold py-1.5 px-3 rounded-xl text-xs transition">استيراد للمولد</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex justify-end">
+                <button onclick="closeScannerModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-2 rounded-xl text-xs">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- درج سجل المحفوظات (Local History Drawer) -->
+    <div id="history-drawer" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex justify-end">
+        <div class="bg-slate-900 border-l border-slate-800 w-full max-w-md h-full p-5 flex flex-col shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                    <span>📁</span> سجل المحفوظات (Local History)
+                </h3>
+                <button onclick="closeHistoryDrawer()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+
+            <div id="history-items-container" class="py-4 space-y-3 overflow-y-auto custom-scrollbar flex-1">
+                <!-- يتم تعبئة السجلات هنا -->
+            </div>
+
+            <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+                <button onclick="clearAllHistory()" class="text-xs text-red-400 hover:text-red-300 font-bold">مسح كافة السجلات</button>
+                <button onclick="closeHistoryDrawer()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-1.5 rounded-xl text-xs">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- حاوية الإشعارات السريعة (Toast) -->
+    <div id="toast-container" class="fixed bottom-5 left-5 z-[200] space-y-2 pointer-events-none"></div>
 
     <script>
-        let logoSrc = null;
-        let currentCodeColor = "#00F2FE";
-        let currentBgColor = "#FFFFFF";
-        let currentRawData = "أهلاً بك! هذا نص عربي سليم 100%.";
+        let activeType = 'text';
+        let isGradient = false;
+        let color1 = "#06B6D4";
+        let color2 = "#8B5CF6";
+        let bgColor = "#FFFFFF";
+        let isBgTransparent = false;
+        let currentLogo = "";
+        let logoSize = 0.35;
+        let logoMargin = 5;
+        let currentMockup = 'standard';
+        let currentRawData = "أهلاً بك في Chikor QR Studio! هذا نص عربي صافٍ 100%.";
 
-        // دالة تحويل أي نص عربي أو رموز خاصة إلى بايتات UTF-8 نقية لكي تفهمها كاميرا ومستشعر الـ QR
+        // تهيئة محرك QRCodeStyling الأساسي
+        const qrCode = new QRCodeStyling({
+            width: 220,
+            height: 220,
+            type: "canvas",
+            data: toUtf8(currentRawData),
+            dotsOptions: { color: color1, type: "square" },
+            cornersSquareOptions: { color: color1, type: "square" },
+            cornersDotOptions: { color: color1, type: "square" },
+            backgroundOptions: { color: bgColor },
+            qrOptions: { errorCorrectionLevel: "H" },
+            imageOptions: { hideBackgroundDots: true, imageSize: logoSize, margin: logoMargin }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const mount = document.getElementById("canvas-mount-point");
+            qrCode.append(mount);
+            renderDynamicFields('text');
+            populateLogosGrid();
+            updateHistoryBadge();
+            // تشغيل محاذاة مؤشرات الألوان
+            applyColor1Hue(188);
+            applyColor2Hue(265);
+        });
+
         function toUtf8(str) {
-            if (!str) return "";
+            if (!str) return " ";
             try {
                 return unescape(encodeURIComponent(str));
             } catch (e) {
@@ -224,46 +603,195 @@
             }
         }
 
-        // تبديل أنواع الإدخال
-        function switchType(type) {
-            document.querySelectorAll('.type-btn').forEach(btn => {
-                btn.className = "type-btn bg-slate-800 text-slate-300 font-bold py-2.5 px-2 rounded-xl transition";
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "toast bg-slate-900 border border-cyan-500/50 text-white px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2 pointer-events-auto";
+            toast.innerHTML = `<span>✨</span> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function switchContentType(type) {
+            activeType = type;
+            document.querySelectorAll('.type-tab-btn').forEach(btn => {
+                btn.className = "type-tab-btn bg-slate-950 text-slate-300 hover:bg-slate-800 py-2 px-2 rounded-xl transition flex items-center justify-center gap-1";
             });
-            document.getElementById(`btn-${type}`).className = "type-btn bg-cyan-600 text-white font-bold py-2.5 px-2 rounded-xl transition shadow";
+            document.getElementById(`tab-${type}`).className = "type-tab-btn bg-cyan-500 text-slate-955 font-bold py-2 px-2 rounded-xl transition flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/20";
+            renderDynamicFields(type);
+            compileAndPushData();
+        }
 
-            const container = document.getElementById('input-container');
-            if (type === 'text') {
-                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">النص الصافي (يظهر تماماً كما تكتبه دون أي تشويه):</label><textarea id="raw-data-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none h-20" oninput="updateQRData()">أهلاً بك! هذا نص عربي سليم 100%.</textarea>`;
-            } else if (type === 'url') {
-                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">الرابط أو الموقع الإلكتروني:</label><input type="text" id="raw-data-input" value="https://github.com/youcefchikor31-ctrl" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none" oninput="updateQRData()">`;
-            } else if (type === 'phone') {
-                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">رقم الهاتف الصريح:</label><input type="text" id="raw-data-input" value="0678901234" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none" oninput="updateQRData()">`;
-            } else if (type === 'sms') {
-                container.innerHTML = `<label class="text-xs text-slate-400 font-semibold block">نص رسالة الـ SMS المباشرة:</label><input type="text" id="raw-data-input" value="رسالة نصية فورية" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:border-cyan-500 outline-none" oninput="updateQRData()">`;
-            } else if (type === 'wifi') {
-                container.innerHTML = `
-                    <div class="space-y-2">
-                        <input type="text" id="wifi-ssid" placeholder="اسم شبكة الواي فاي (SSID)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none" oninput="updateWifiData()">
-                        <input type="text" id="wifi-pass" placeholder="كلمة المرور" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none" oninput="updateWifiData()">
-                    </div>`;
+        function renderDynamicFields(type) {
+            const container = document.getElementById('dynamic-fields-container');
+            let html = '';
+
+            switch(type) {
+                case 'text':
+                    html = `
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">النص الصريح (عربي / إنجليزي بدون أي تشفير):</label>
+                            <textarea id="field-text" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">أهلاً بك في Chikor QR Studio! هذا نص عربي صافٍ 100%.</textarea>
+                        </div>`;
+                    break;
+                case 'url':
+                    html = `
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">رابط الموقع (URL):</label>
+                            <input type="url" id="field-url" value="https://github.com/youcefchikor31-ctrl" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">
+                        </div>`;
+                    break;
+                case 'phone':
+                    html = `
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">رقم الهاتف المباشر:</label>
+                            <input type="tel" id="field-phone" value="+213555000000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">
+                        </div>`;
+                    break;
+                case 'sms':
+                    html = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="text-xs text-slate-400 block mb-1">رقم المستلم:</label>
+                                <input type="tel" id="field-sms-phone" value="+213555000000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400 block mb-1">نص الرسالة:</label>
+                                <input type="text" id="field-sms-body" value="مرحباً، أود الاستفسار عن خدماتك." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">
+                            </div>
+                        </div>`;
+                    break;
+                case 'wifi':
+                    html = `
+                        <div class="space-y-2.5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="text-xs text-slate-400 block mb-1">اسم الشبكة (SSID):</label>
+                                    <input type="text" id="field-wifi-ssid" value="Chikor_VIP_WiFi" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-400 block mb-1">كلمة المرور:</label>
+                                    <input type="text" id="field-wifi-pass" value="ChikorPass2026" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-cyan-500 outline-none" oninput="compileAndPushData()">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs pt-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-400">التشفير:</span>
+                                    <select id="field-wifi-enc" onchange="compileAndPushData()" class="bg-slate-950 border border-slate-800 rounded-lg p-1 text-white text-xs">
+                                        <option value="WPA">WPA/WPA2</option>
+                                        <option value="WEP">WEP</option>
+                                        <option value="nopass">بدون كلمة سر</option>
+                                    </select>
+                                </div>
+                                <label class="text-slate-400 flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="field-wifi-hidden" onchange="compileAndPushData()" class="rounded bg-slate-950 border-slate-700 text-cyan-500">
+                                    <span>شبكة مخفية</span>
+                                </label>
+                            </div>
+                        </div>`;
+                    break;
+                case 'vcard':
+                    html = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <input type="text" id="vcard-fn" placeholder="الاسم الأول" value="يوسف" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="text" id="vcard-ln" placeholder="اللقب / العائلة" value="شيكور" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="text" id="vcard-org" placeholder="الشركة / المؤسسة" value="Chikor Studio" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="text" id="vcard-title" placeholder="المسمى الوظيفي" value="Creative Lead" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="tel" id="vcard-phone" placeholder="رقم الهاتف" value="+213555000000" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="email" id="vcard-email" placeholder="البريد الإلكتروني" value="contact@chikor.studio" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                        </div>`;
+                    break;
+                case 'location':
+                    html = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">خط العرض (Latitude):</label>
+                                <input type="text" id="field-lat" value="35.6987" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">خط الطول (Longitude):</label>
+                                <input type="text" id="field-lng" value="-0.6349" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            </div>
+                        </div>`;
+                    break;
+                case 'event':
+                    html = `
+                        <div class="space-y-2 text-xs">
+                            <input type="text" id="field-event-title" placeholder="عنوان الفعالية / المناسبة" value="مؤتمر التقنية والإبداع 2026" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="text" id="field-event-loc" placeholder="المكان / القاعة" value="Oran Convention Center" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="text-[10px] text-slate-400">تاريخ البدء:</label><input type="datetime-local" id="field-event-start" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-white outline-none" oninput="compileAndPushData()"></div>
+                                <div><label class="text-[10px] text-slate-400">تاريخ الانتهاء:</label><input type="datetime-local" id="field-event-end" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-white outline-none" oninput="compileAndPushData()"></div>
+                            </div>
+                        </div>`;
+                    break;
+                case 'email':
+                    html = `
+                        <div class="space-y-2 text-xs">
+                            <input type="email" id="field-email-to" placeholder="البريد الإلكتروني للمستلم" value="support@chikor.studio" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <input type="text" id="field-email-sub" placeholder="موضوع الرسالة" value="استفسار وشراكة" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none" oninput="compileAndPushData()">
+                            <textarea id="field-email-body" placeholder="محتوى الرسالة..." rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white outline-none" oninput="compileAndPushData()">مرحباً، أود التواصل بخصوص مشروع جديد.</textarea>
+                        </div>`;
+                    break;
             }
-            updateQRData();
+            container.innerHTML = html;
         }
 
-        function updateQRData() {
-            const input = document.getElementById('raw-data-input');
-            currentRawData = input ? input.value : "";
-            qrCode.update({ data: toUtf8(currentRawData) });
+        function compileAndPushData() {
+            let data = "";
+            switch(activeType) {
+                case 'text':
+                    data = document.getElementById('field-text')?.value || "";
+                    break;
+                case 'url':
+                    data = document.getElementById('field-url')?.value || "";
+                    break;
+                case 'phone':
+                    data = document.getElementById('field-phone')?.value || "";
+                    break;
+                case 'sms':
+                    const sPh = document.getElementById('field-sms-phone')?.value || "";
+                    const sTxt = document.getElementById('field-sms-body')?.value || "";
+                    data = `smsto:${sPh}:${sTxt}`;
+                    break;
+                case 'wifi':
+                    const ssid = document.getElementById('field-wifi-ssid')?.value || "";
+                    const pass = document.getElementById('field-wifi-pass')?.value || "";
+                    const enc = document.getElementById('field-wifi-enc')?.value || "WPA";
+                    const hid = document.getElementById('field-wifi-hidden')?.checked ? "true" : "false";
+                    data = `WIFI:S:${ssid};T:${enc};P:${pass};H:${hid};;`;
+                    break;
+                case 'vcard':
+                    const fn = document.getElementById('vcard-fn')?.value || "";
+                    const ln = document.getElementById('vcard-ln')?.value || "";
+                    const org = document.getElementById('vcard-org')?.value || "";
+                    const title = document.getElementById('vcard-title')?.value || "";
+                    const ph = document.getElementById('vcard-phone')?.value || "";
+                    const em = document.getElementById('vcard-email')?.value || "";
+                    data = `BEGIN:VCARD\nVERSION:3.0\nN:${ln};${fn};;;\nFN:${fn} ${ln}\nORG:${org}\nTITLE:${title}\nTEL:${ph}\nEMAIL:${em}\nEND:VCARD`;
+                    break;
+                case 'location':
+                    const lat = document.getElementById('field-lat')?.value || "0";
+                    const lng = document.getElementById('field-lng')?.value || "0";
+                    data = `https://www.google.com/maps?q=${lat},${lng}`;
+                    break;
+                case 'event':
+                    const evTitle = document.getElementById('field-event-title')?.value || "Event";
+                    const evLoc = document.getElementById('field-event-loc')?.value || "";
+                    data = `BEGIN:VEVENT\nSUMMARY:${evTitle}\nLOCATION:${evLoc}\nEND:VEVENT`;
+                    break;
+                case 'email':
+                    const to = document.getElementById('field-email-to')?.value || "";
+                    const sub = document.getElementById('field-email-sub')?.value || "";
+                    const body = document.getElementById('field-email-body')?.value || "";
+                    data = `mailto:${to}?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`;
+                    break;
+            }
+
+            currentRawData = data || " ";
+            triggerQRUpdate();
         }
 
-        function updateWifiData() {
-            const ssid = document.getElementById('wifi-ssid')?.value || "";
-            const pass = document.getElementById('wifi-pass')?.value || "";
-            currentRawData = `WIFI:S:${ssid};T:WPA;P:${pass};;`;
-            qrCode.update({ data: toUtf8(currentRawData) });
-        }
-
-        // تحويل درجات التدرج اللوني بدقة متناهية
         function hslToHex(h, s, l) {
             l /= 100;
             const a = s * Math.min(l, 1 - l) / 100;
@@ -275,41 +803,201 @@
             return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
         }
 
-        function applyCodeColor(hue) {
-            currentCodeColor = hslToHex(Number(hue), 100, 50);
-            document.getElementById('code-color-hex').textContent = currentCodeColor;
-            document.getElementById('code-color-preview').style.backgroundColor = currentCodeColor;
-            document.getElementById('code-hue').style.setProperty('--thumb-bg', currentCodeColor);
-            refreshQR();
+        function setColorMode(mode) {
+            isGradient = (mode === 'gradient');
+            const btnSolid = document.getElementById('btn-mode-solid');
+            const btnGrad = document.getElementById('btn-mode-gradient');
+            const gradWrapper = document.getElementById('gradient-controls-wrapper');
+            const labelColor1 = document.getElementById('label-color1');
+
+            if (isGradient) {
+                btnGrad.className = "px-2.5 py-1 rounded-lg bg-cyan-500 text-slate-950 font-bold transition";
+                btnSolid.className = "px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition";
+                gradWrapper.classList.remove('hidden');
+                labelColor1.textContent = "اللون الأول للتدرج:";
+            } else {
+                btnSolid.className = "px-2.5 py-1 rounded-lg bg-cyan-500 text-slate-950 font-bold transition";
+                btnGrad.className = "px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition";
+                gradWrapper.classList.add('hidden');
+                labelColor1.textContent = "لون الباركود الأساسي:";
+            }
+            triggerQRUpdate();
         }
 
-        function setCodeColorDirect(hex) {
-            currentCodeColor = hex;
-            document.getElementById('code-color-hex').textContent = currentCodeColor;
-            document.getElementById('code-color-preview').style.backgroundColor = currentCodeColor;
-            document.getElementById('code-hue').style.setProperty('--thumb-bg', currentCodeColor);
-            refreshQR();
+        function applyColor1Hue(val) {
+            color1 = hslToHex(Number(val), 100, 50);
+            document.getElementById('hex-color1').textContent = color1;
+            document.getElementById('preview-color1').style.backgroundColor = color1;
+            document.getElementById('slider-color1').style.setProperty('--thumb-color', color1);
+            triggerQRUpdate();
         }
 
-        function applyBgColor(hue) {
-            currentBgColor = hslToHex(Number(hue), 100, 50);
-            document.getElementById('bg-color-hex').textContent = currentBgColor;
-            document.getElementById('bg-color-preview').style.backgroundColor = currentBgColor;
-            document.getElementById('bg-hue').style.setProperty('--thumb-bg', currentBgColor);
-            refreshQR();
+        function handleColor1Input(val) { applyColor1Hue(val); }
+
+        function setQuickColor1(hex) {
+            color1 = hex.toUpperCase();
+            document.getElementById('hex-color1').textContent = color1;
+            document.getElementById('preview-color1').style.backgroundColor = color1;
+            document.getElementById('slider-color1').style.setProperty('--thumb-color', color1);
+            triggerQRUpdate();
         }
 
-        function setBgColorDirect(hex) {
-            currentBgColor = hex;
-            document.getElementById('bg-color-hex').textContent = currentBgColor;
-            document.getElementById('bg-color-preview').style.backgroundColor = currentBgColor;
-            document.getElementById('bg-hue').style.setProperty('--thumb-bg', currentBgColor);
-            refreshQR();
+        function applyColor2Hue(val) {
+            color2 = hslToHex(Number(val), 100, 50);
+            document.getElementById('hex-color2').textContent = color2;
+            document.getElementById('preview-color2').style.backgroundColor = color2;
+            document.getElementById('slider-color2').style.setProperty('--thumb-color', color2);
+            triggerQRUpdate();
         }
 
-        // مصفوفة متكاملة تضم أكثر من 200 شعار فريد بالكامل
-        const logosList = [
-            // منصات التواصل والتراسل (1 - 30)
+        function handleColor2Input(val) { applyColor2Hue(val); }
+
+        function handleBgInput(val) {
+            if (isBgTransparent) return;
+            bgColor = hslToHex(Number(val), 100, 95);
+            document.getElementById('hex-bg').textContent = bgColor;
+            document.getElementById('preview-bg').style.backgroundColor = bgColor;
+            document.getElementById('slider-bg').style.setProperty('--thumb-color', bgColor);
+            triggerQRUpdate();
+        }
+
+        function setQuickBg(hex) {
+            isBgTransparent = false;
+            document.getElementById('bg-transparent-toggle').checked = false;
+            bgColor = hex;
+            document.getElementById('hex-bg').textContent = hex.toUpperCase();
+            document.getElementById('preview-bg').style.backgroundColor = hex;
+            document.getElementById('slider-bg').style.setProperty('--thumb-color', hex);
+            triggerQRUpdate();
+        }
+
+        function handleTransparentBg(checked) {
+            isBgTransparent = checked;
+            bgColor = checked ? "transparent" : "#FFFFFF";
+            document.getElementById('hex-bg').textContent = checked ? "TRANSPARENT" : "#FFFFFF";
+            document.getElementById('preview-bg').style.backgroundColor = checked ? "transparent" : "#FFFFFF";
+            triggerQRUpdate();
+        }
+
+        function triggerQRUpdate() {
+            const dotsType = document.getElementById('select-dots-type').value;
+            const cornersSquareType = document.getElementById('select-corners-square').value;
+            const cornersDotType = document.getElementById('select-corners-dot').value;
+            const errorCorrectionLevel = document.getElementById('select-error-level').value;
+            const clearDotsBehind = document.getElementById('clear-dots-behind-logo').checked;
+            const gradType = document.getElementById('gradient-type-select').value;
+            const gradRot = Number(document.getElementById('gradient-rotation').value) || 0;
+
+            let dotsOptions = { type: dotsType };
+            if (isGradient) {
+                dotsOptions.gradient = {
+                    type: gradType,
+                    rotation: gradRot * (Math.PI / 180),
+                    colorStops: [{ offset: 0, color: color1 }, { offset: 1, color: color2 }]
+                };
+            } else {
+                dotsOptions.color = color1;
+            }
+
+            qrCode.update({
+                data: toUtf8(currentRawData),
+                dotsOptions: dotsOptions,
+                cornersSquareOptions: { color: color1, type: cornersSquareType },
+                cornersDotOptions: { color: color1, type: cornersDotType },
+                backgroundOptions: { color: bgColor },
+                qrOptions: { errorCorrectionLevel: errorCorrectionLevel },
+                image: currentLogo,
+                imageOptions: {
+                    hideBackgroundDots: clearDotsBehind,
+                    imageSize: logoSize,
+                    margin: logoMargin
+                }
+            });
+
+            // تحديث المعاينات داخل القوالب إذا لزم الأمر
+            replicateCanvasToMockups();
+        }
+
+        function setMockupView(view) {
+            currentMockup = view;
+            ['standard', 'card', 'table', 'poster'].forEach(m => {
+                const btn = document.getElementById(`btn-mockup-${m}`);
+                const wrap = document.getElementById(`wrapper-${m}`);
+                if (m === view) {
+                    btn.className = "flex-1 py-1.5 px-2 rounded-lg bg-cyan-500 text-slate-950 font-bold transition whitespace-nowrap";
+                    wrap.classList.remove('hidden');
+                } else {
+                    btn.className = "flex-1 py-1.5 px-2 rounded-lg text-slate-400 hover:text-white transition whitespace-nowrap";
+                    wrap.classList.add('hidden');
+                }
+            });
+            replicateCanvasToMockups();
+        }
+
+        function replicateCanvasToMockups() {
+            setTimeout(() => {
+                const originalCanvas = document.querySelector('#canvas-mount-point canvas');
+                if (!originalCanvas) return;
+                const dataUrl = originalCanvas.toDataURL();
+
+                ['card', 'table', 'poster'].forEach(m => {
+                    const dest = document.getElementById(`canvas-${m}-dest`);
+                    if (dest) {
+                        dest.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-contain rounded-lg">`;
+                    }
+                });
+            }, 50);
+        }
+
+        function toggleFrameDisplay(checked) {
+            const frameDisplay = document.getElementById('frame-text-display');
+            if (checked) {
+                frameDisplay.classList.remove('hidden');
+            } else {
+                frameDisplay.classList.add('hidden');
+            }
+        }
+
+        function handleFrameTextInput(val) {
+            document.getElementById('frame-text-display').textContent = val || "SCAN ME";
+        }
+
+        document.getElementById('custom-logo-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    currentLogo = evt.target.result;
+                    document.getElementById('active-logo-indicator').textContent = "شعار شخصي مرفوع";
+                    triggerQRUpdate();
+                    showToast("تم تطبيق شعارك الخاص بنجاح!");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function handleLogoSize(val) {
+            logoSize = Number(val) / 100;
+            document.getElementById('logo-size-val').textContent = `${val}%`;
+            triggerQRUpdate();
+        }
+
+        function handleLogoMargin(val) {
+            logoMargin = Number(val);
+            document.getElementById('logo-margin-val').textContent = `${val}px`;
+            triggerQRUpdate();
+        }
+
+        function removeLogo() {
+            currentLogo = "";
+            document.getElementById('custom-logo-input').value = "";
+            document.getElementById('active-logo-indicator').textContent = "لا يوجد شعار محدد";
+            triggerQRUpdate();
+            showToast("تمت إزالة الشعار بالكامل");
+        }
+
+        const logosDatabase = [
+            // منصات التواصل والتراسل (1 - 35)
             { name: "Instagram", url: "https://cdn-icons-png.flaticon.com/512/174/174855.png" },
             { name: "Facebook", url: "https://cdn-icons-png.flaticon.com/512/733/733547.png" },
             { name: "GitHub", url: "https://cdn-icons-png.flaticon.com/512/25/25231.png" },
@@ -340,8 +1028,13 @@
             { name: "SoundCloud", url: "https://cdn-icons-png.flaticon.com/512/145/145804.png" },
             { name: "Vimeo", url: "https://cdn-icons-png.flaticon.com/512/174/174879.png" },
             { name: "Line App", url: "https://cdn-icons-png.flaticon.com/512/3670/3670017.png" },
+            { name: "Threads", url: "https://cdn-icons-png.flaticon.com/512/10097/10097063.png" },
+            { name: "Mastodon", url: "https://cdn-icons-png.flaticon.com/512/2111/2111516.png" },
+            { name: "Signal", url: "https://cdn-icons-png.flaticon.com/512/3670/3670051.png" },
+            { name: "Clubhouse", url: "https://cdn-icons-png.flaticon.com/512/4406/4406234.png" },
+            { name: "WhatsApp Biz", url: "https://cdn-icons-png.flaticon.com/512/733/733585.png" },
 
-            // الموسيقى والبث والألعاب (31 - 60)
+            // الموسيقى والوسائط والألعاب (36 - 70)
             { name: "Spotify", url: "https://cdn-icons-png.flaticon.com/512/2111/2111624.png" },
             { name: "Netflix", url: "https://cdn-icons-png.flaticon.com/512/732/732228.png" },
             { name: "Disney Plus", url: "https://cdn-icons-png.flaticon.com/512/825/825541.png" },
@@ -369,11 +1062,16 @@
             { name: "Tidal", url: "https://cdn-icons-png.flaticon.com/512/5968/5968882.png" },
             { name: "Pandora", url: "https://cdn-icons-png.flaticon.com/512/174/174860.png" },
             { name: "DailyMotion", url: "https://cdn-icons-png.flaticon.com/512/174/174844.png" },
-            { name: "Clubhouse", url: "https://cdn-icons-png.flaticon.com/512/4406/4406234.png" },
-            { name: "Signal", url: "https://cdn-icons-png.flaticon.com/512/3670/3670051.png" },
-            { name: "WhatsApp Biz", url: "https://cdn-icons-png.flaticon.com/512/733/733585.png" },
+            { name: "Letterboxd", url: "https://cdn-icons-png.flaticon.com/512/825/825519.png" },
+            { name: "SoundCloud Pro", url: "https://cdn-icons-png.flaticon.com/512/3670/3670057.png" },
+            { name: "TikTok Lite", url: "https://cdn-icons-png.flaticon.com/512/3046/3046120.png" },
+            { name: "Game Jolt", url: "https://cdn-icons-png.flaticon.com/512/825/825510.png" },
+            { name: "Itch.io", url: "https://cdn-icons-png.flaticon.com/512/825/825517.png" },
+            { name: "GOG.com", url: "https://cdn-icons-png.flaticon.com/512/825/825511.png" },
+            { name: "Battle.net", url: "https://cdn-icons-png.flaticon.com/512/825/825494.png" },
+            { name: "HBO Max", url: "https://cdn-icons-png.flaticon.com/512/825/825539.png" },
 
-            // الدفع والعملات والتجارة (61 - 90)
+            // العملات والدفع والتجارة (71 - 105)
             { name: "PayPal", url: "https://cdn-icons-png.flaticon.com/512/174/174861.png" },
             { name: "Binance", url: "https://cdn-icons-png.flaticon.com/512/6125/6125139.png" },
             { name: "Bitcoin", url: "https://cdn-icons-png.flaticon.com/512/5968/5968260.png" },
@@ -401,11 +1099,16 @@
             { name: "Western Union", url: "https://cdn-icons-png.flaticon.com/512/825/825556.png" },
             { name: "MoneyGram", url: "https://cdn-icons-png.flaticon.com/512/825/825522.png" },
             { name: "Revolut", url: "https://cdn-icons-png.flaticon.com/512/825/825546.png" },
-            { name: "Wise Transfer", url: "https://cdn-icons-png.flaticon.com/512/825/825557.png" },
+            { name: "Wise", url: "https://cdn-icons-png.flaticon.com/512/825/825557.png" },
             { name: "Cash App", url: "https://cdn-icons-png.flaticon.com/512/825/825496.png" },
             { name: "Venmo", url: "https://cdn-icons-png.flaticon.com/512/825/825554.png" },
+            { name: "Klarna", url: "https://cdn-icons-png.flaticon.com/512/825/825518.png" },
+            { name: "Patreon", url: "https://cdn-icons-png.flaticon.com/512/825/825534.png" },
+            { name: "Buy Me Coffee", url: "https://cdn-icons-png.flaticon.com/512/825/825497.png" },
+            { name: "Crypto.com", url: "https://cdn-icons-png.flaticon.com/512/6125/6125150.png" },
+            { name: "Coinbase", url: "https://cdn-icons-png.flaticon.com/512/6125/6125148.png" },
 
-            // أنظمة التشغيل والشركات والتقنية (91 - 120)
+            // أنظمة التشغيل والتقنية والشركات (106 - 140)
             { name: "Google", url: "https://cdn-icons-png.flaticon.com/512/2991/2991148.png" },
             { name: "Apple", url: "https://cdn-icons-png.flaticon.com/512/0/747.png" },
             { name: "Microsoft", url: "https://cdn-icons-png.flaticon.com/512/732/732221.png" },
@@ -436,8 +1139,13 @@
             { name: "Fedora", url: "https://cdn-icons-png.flaticon.com/512/888/888850.png" },
             { name: "RedHat", url: "https://cdn-icons-png.flaticon.com/512/888/888869.png" },
             { name: "Arch Linux", url: "https://cdn-icons-png.flaticon.com/512/888/888842.png" },
+            { name: "Raspberry Pi", url: "https://cdn-icons-png.flaticon.com/512/888/888868.png" },
+            { name: "LG", url: "https://cdn-icons-png.flaticon.com/512/888/888855.png" },
+            { name: "Panasonic", url: "https://cdn-icons-png.flaticon.com/512/888/888865.png" },
+            { name: "Philips", url: "https://cdn-icons-png.flaticon.com/512/888/888867.png" },
+            { name: "Motorola", url: "https://cdn-icons-png.flaticon.com/512/888/888858.png" },
 
-            // البرمجة والتطوير والأدوات (121 - 160)
+            // البرمجة والتطوير والويب (141 - 175)
             { name: "Python", url: "https://cdn-icons-png.flaticon.com/512/5968/5968350.png" },
             { name: "JavaScript", url: "https://cdn-icons-png.flaticon.com/512/5968/5968292.png" },
             { name: "HTML5", url: "https://cdn-icons-png.flaticon.com/512/732/732212.png" },
@@ -473,127 +1181,290 @@
             { name: "Dart", url: "https://cdn-icons-png.flaticon.com/512/5968/5968700.png" },
             { name: "Flutter", url: "https://cdn-icons-png.flaticon.com/512/5968/5968702.png" },
             { name: "VS Code", url: "https://cdn-icons-png.flaticon.com/512/906/906324.png" },
-            { name: "NPM", url: "https://cdn-icons-png.flaticon.com/512/5968/5968322.png" },
-            { name: "GraphQL", url: "https://cdn-icons-png.flaticon.com/512/5968/5968704.png" },
-            { name: "Canva", url: "https://cdn-icons-png.flaticon.com/512/5968/5968699.png" },
-            { name: "StackOverflow", url: "https://cdn-icons-png.flaticon.com/512/2111/2111628.png" },
-            { name: "Postman", url: "https://cdn-icons-png.flaticon.com/512/5968/5968703.png" },
 
-            // الرموز التعبيرية والأدوات الحياتية (161 - 205)
-            { name: "Heart Love", url: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
+            // الرموز التعبيرية والأدوات والأيقونات العامة (176 - 205)
+            { name: "Heart", url: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
             { name: "Star Gold", url: "https://cdn-icons-png.flaticon.com/512/1828/1828884.png" },
-            { name: "Rocket Fast", url: "https://cdn-icons-png.flaticon.com/512/1356/1356479.png" },
-            { name: "Diamond Gem", url: "https://cdn-icons-png.flaticon.com/512/3468/3468087.png" },
-            { name: "Crown King", url: "https://cdn-icons-png.flaticon.com/512/2539/2539611.png" },
-            { name: "Shield Safe", url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png" },
+            { name: "Rocket", url: "https://cdn-icons-png.flaticon.com/512/1356/1356479.png" },
+            { name: "Diamond", url: "https://cdn-icons-png.flaticon.com/512/3468/3468087.png" },
+            { name: "Crown", url: "https://cdn-icons-png.flaticon.com/512/2539/2539611.png" },
+            { name: "Shield", url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png" },
             { name: "Gamepad", url: "https://cdn-icons-png.flaticon.com/512/686/686589.png" },
             { name: "Gift Box", url: "https://cdn-icons-png.flaticon.com/512/4213/4213912.png" },
-            { name: "Trophy Cup", url: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png" },
-            { name: "Medal Badge", url: "https://cdn-icons-png.flaticon.com/512/2539/2539634.png" },
-            { name: "Fire Flame", url: "https://cdn-icons-png.flaticon.com/512/785/785116.png" },
+            { name: "Trophy", url: "https://cdn-icons-png.flaticon.com/512/3112/3112946.png" },
+            { name: "Medal", url: "https://cdn-icons-png.flaticon.com/512/2539/2539634.png" },
+            { name: "Fire", url: "https://cdn-icons-png.flaticon.com/512/785/785116.png" },
             { name: "Lightning", url: "https://cdn-icons-png.flaticon.com/512/565/565322.png" },
             { name: "Lock Safe", url: "https://cdn-icons-png.flaticon.com/512/3064/3064197.png" },
             { name: "Key Access", url: "https://cdn-icons-png.flaticon.com/512/893/893309.png" },
             { name: "Email Mail", url: "https://cdn-icons-png.flaticon.com/512/561/561127.png" },
             { name: "Phone Call", url: "https://cdn-icons-png.flaticon.com/512/455/455705.png" },
             { name: "Location Pin", url: "https://cdn-icons-png.flaticon.com/512/854/854878.png" },
-            { name: "Camera Lens", url: "https://cdn-icons-png.flaticon.com/512/1042/1042339.png" },
+            { name: "Camera", url: "https://cdn-icons-png.flaticon.com/512/1042/1042339.png" },
             { name: "Headphones", url: "https://cdn-icons-png.flaticon.com/512/727/727245.png" },
-            { name: "Video Play", url: "https://cdn-icons-png.flaticon.com/512/1179/1179069.png" },
+            { name: "Video", url: "https://cdn-icons-png.flaticon.com/512/1179/1179069.png" },
             { name: "Shopping Bag", url: "https://cdn-icons-png.flaticon.com/512/1170/1170678.png" },
-            { name: "Shopping Cart", url: "https://cdn-icons-png.flaticon.com/512/1170/1170576.png" },
-            { name: "Plane Travel", url: "https://cdn-icons-png.flaticon.com/512/723/723915.png" },
-            { name: "Car Drive", url: "https://cdn-icons-png.flaticon.com/512/741/741407.png" },
-            { name: "Home House", url: "https://cdn-icons-png.flaticon.com/512/25/25694.png" },
+            { name: "Cart", url: "https://cdn-icons-png.flaticon.com/512/1170/1170576.png" },
+            { name: "Plane", url: "https://cdn-icons-png.flaticon.com/512/723/723915.png" },
+            { name: "Car", url: "https://cdn-icons-png.flaticon.com/512/741/741407.png" },
+            { name: "Home", url: "https://cdn-icons-png.flaticon.com/512/25/25694.png" },
             { name: "Building", url: "https://cdn-icons-png.flaticon.com/512/3067/3067425.png" },
-            { name: "Bank Vault", url: "https://cdn-icons-png.flaticon.com/512/2830/2830284.png" },
-            { name: "Wallet Money", url: "https://cdn-icons-png.flaticon.com/512/3037/3037247.png" },
+            { name: "Bank", url: "https://cdn-icons-png.flaticon.com/512/2830/2830284.png" },
+            { name: "Wallet", url: "https://cdn-icons-png.flaticon.com/512/3037/3037247.png" },
             { name: "Credit Card", url: "https://cdn-icons-png.flaticon.com/512/179/179410.png" },
-            { name: "Coffee Cup", url: "https://cdn-icons-png.flaticon.com/512/924/924514.png" },
-            { name: "Book Read", url: "https://cdn-icons-png.flaticon.com/512/3389/3389081.png" },
-            { name: "Graduation", url: "https://cdn-icons-png.flaticon.com/512/2436/2436636.png" },
-            { name: "Briefcase", url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png" },
-            { name: "Wrench Tool", url: "https://cdn-icons-png.flaticon.com/512/994/994930.png" },
-            { name: "Gear Setting", url: "https://cdn-icons-png.flaticon.com/512/126/126472.png" },
-            { name: "Globe Earth", url: "https://cdn-icons-png.flaticon.com/512/814/814587.png" },
-            { name: "Compass", url: "https://cdn-icons-png.flaticon.com/512/891/891448.png" },
-            { name: "Sun Bright", url: "https://cdn-icons-png.flaticon.com/512/869/869869.png" },
-            { name: "Moon Night", url: "https://cdn-icons-png.flaticon.com/512/624/624647.png" },
-            { name: "Smile Face", url: "https://cdn-icons-png.flaticon.com/512/742/742751.png" },
-            { name: "User Profile", url: "https://cdn-icons-png.flaticon.com/512/1077/1077114.png" },
-            { name: "Users Group", url: "https://cdn-icons-png.flaticon.com/512/681/681494.png" },
-            { name: "Chat Bubble", url: "https://cdn-icons-png.flaticon.com/512/1341/1341599.png" },
-            { name: "Bell Alert", url: "https://cdn-icons-png.flaticon.com/512/3607/3607271.png" },
-            { name: "Search Icon", url: "https://cdn-icons-png.flaticon.com/512/54/54481.png" }
+            { name: "Coffee", url: "https://cdn-icons-png.flaticon.com/512/924/924514.png" }
         ];
 
-        // تعبئة شبكة الـ 200+ شعار الفريد
-        const logosGrid = document.getElementById('logos-grid');
-        logosList.forEach((logo, index) => {
-            const btn = document.createElement('button');
-            btn.className = "bg-slate-950 border border-slate-800 hover:border-cyan-500 p-2 rounded-xl flex flex-col items-center justify-center gap-1 transition cursor-pointer group";
-            btn.innerHTML = `
-                <img src="${logo.url}" alt="${logo.name}" class="w-6 h-6 sm:w-7 sm:h-7 object-contain group-hover:scale-110 transition">
-                <span class="text-[8px] sm:text-[9px] text-slate-400 truncate w-full text-center">${index + 1}. ${logo.name}</span>
-            `;
-            btn.onclick = () => {
-                logoSrc = logo.url;
-                refreshQR();
-                closeLogoModal();
-            };
-            logosGrid.appendChild(btn);
-        });
-
-        function openLogoModal() { document.getElementById('logo-modal').classList.remove('hidden'); }
-        function closeLogoModal() { document.getElementById('logo-modal').classList.add('hidden'); }
-        function removeLogo() { logoSrc = null; refreshQR(); }
-
-        // تهيئة محرك الباركود مع معالجة الـ UTF-8
-        const qrCode = new QRCodeStyling({
-            width: 220,
-            height: 220,
-            type: "canvas",
-            data: toUtf8(currentRawData),
-            dotsOptions: { color: currentCodeColor, type: "square" },
-            cornersSquareOptions: { color: currentCodeColor, type: "square" },
-            backgroundOptions: { color: currentBgColor },
-            imageOptions: { hideBackgroundDots: true, imageSize: 0.35, margin: 4 }
-        });
-
-        qrCode.append(document.getElementById("canvas-container"));
-
-        function refreshQR() {
-            const dotStyle = document.getElementById('dot-style').value;
-            const cornerStyle = document.getElementById('corner-style').value;
-
-            qrCode.update({
-                data: toUtf8(currentRawData),
-                dotsOptions: { color: currentCodeColor, type: dotStyle },
-                cornersSquareOptions: { color: currentCodeColor, type: cornerStyle },
-                backgroundOptions: { color: currentBgColor },
-                image: logoSrc
+        function populateLogosGrid() {
+            const container = document.getElementById('logos-grid-container');
+            container.innerHTML = "";
+            logosDatabase.forEach((logo, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "logo-card bg-slate-950 border border-slate-800 hover:border-cyan-500 p-2 rounded-2xl flex flex-col items-center justify-center gap-1 transition cursor-pointer group";
+                btn.dataset.name = logo.name.toLowerCase();
+                btn.innerHTML = `
+                    <img src="${logo.url}" alt="${logo.name}" loading="lazy" class="w-7 h-7 object-contain group-hover:scale-110 transition">
+                    <span class="text-[8px] text-slate-400 truncate w-full text-center">${idx + 1}. ${logo.name}</span>
+                `;
+                btn.onclick = () => {
+                    currentLogo = logo.url;
+                    document.getElementById('active-logo-indicator').textContent = `الشعار: ${logo.name}`;
+                    triggerQRUpdate();
+                    closeLogosModal();
+                    showToast(`تم تطبيق شعار ${logo.name}!`);
+                };
+                container.appendChild(btn);
             });
         }
 
-        // تحميل فائق الدقة بدون أي تشويش
-        function downloadHD() {
-            const dotStyle = document.getElementById('dot-style').value;
-            const cornerStyle = document.getElementById('corner-style').value;
+        function filterLogos(term) {
+            const q = term.toLowerCase().trim();
+            document.querySelectorAll('.logo-card').forEach(card => {
+                if (!q || card.dataset.name.includes(q)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
 
-            const hdQr = new QRCodeStyling({
+        function openLogosModal() { document.getElementById('logos-modal').classList.remove('hidden'); }
+        function closeLogosModal() { document.getElementById('logos-modal').classList.add('hidden'); }
+
+        function openScannerModal() { document.getElementById('scanner-modal').classList.remove('hidden'); }
+        function closeScannerModal() { document.getElementById('scanner-modal').classList.add('hidden'); }
+
+        function processQRImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const status = document.getElementById('scanner-status');
+            const resultBox = document.getElementById('scanner-content');
+            const textOutput = document.getElementById('scanner-text-output');
+
+            status.textContent = "جاري قراءة وتحليل الصورة...";
+            status.classList.remove('hidden');
+            resultBox.classList.add('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "dontInvert",
+                    });
+
+                    if (code && code.data) {
+                        status.classList.add('hidden');
+                        resultBox.classList.remove('hidden');
+                        textOutput.textContent = code.data;
+                        showToast("تم قراءة الرمز بنجاح!");
+                    } else {
+                        status.textContent = "عذراً، تعذر العثور على رمز QR صالح في هذه الصورة. يرجى تجربة صورة أوضح.";
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function copyScannerOutput() {
+            const text = document.getElementById('scanner-text-output').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+            }
+            showToast("تم نسخ النتيجة إلى الحافظة!");
+        }
+
+        function importScannerToStudio() {
+            const text = document.getElementById('scanner-text-output').textContent;
+            switchContentType('text');
+            const field = document.getElementById('field-text');
+            if (field) {
+                field.value = text;
+                compileAndPushData();
+            }
+            closeScannerModal();
+            showToast("تم استيراد المحتوى إلى لوحة التعديل!");
+        }
+
+        function saveToHistory(dataUrl) {
+            try {
+                let history = JSON.parse(localStorage.getItem('chikor_qr_history') || "[]");
+                const newItem = {
+                    id: Date.now(),
+                    type: activeType,
+                    data: currentRawData.substring(0, 80),
+                    thumb: dataUrl,
+                    date: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+                };
+                history.unshift(newItem);
+                if (history.length > 10) history = history.slice(0, 10);
+                localStorage.setItem('chikor_qr_history', JSON.stringify(history));
+                updateHistoryBadge();
+            } catch (e) {}
+        }
+
+        function updateHistoryBadge() {
+            try {
+                const history = JSON.parse(localStorage.getItem('chikor_qr_history') || "[]");
+                document.getElementById('history-badge-count').textContent = history.length;
+            } catch (e) {}
+        }
+
+        function openHistoryDrawer() {
+            const drawer = document.getElementById('history-drawer');
+            const container = document.getElementById('history-items-container');
+            container.innerHTML = "";
+            let history = [];
+            try { history = JSON.parse(localStorage.getItem('chikor_qr_history') || "[]"); } catch(e){}
+
+            if (history.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-10">لا توجد عناصر محفوظة حتى الآن.</p>`;
+            } else {
+                history.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = "bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-3";
+                    el.innerHTML = `
+                        <img src="${item.thumb}" class="w-12 h-12 bg-white rounded-xl p-1 object-contain border border-slate-700">
+                        <div class="flex-1 min-w-0 text-right">
+                            <span class="text-[10px] bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full font-bold">${item.type.toUpperCase()}</span>
+                            <p class="text-xs text-slate-200 truncate mt-1">${item.data}</p>
+                            <span class="text-[10px] text-slate-500">${item.date}</span>
+                        </div>
+                        <button onclick="deleteHistoryItem(${item.id})" class="text-red-400 hover:text-red-300 text-xs p-1">🗑️</button>
+                    `;
+                    container.appendChild(el);
+                });
+            }
+            drawer.classList.remove('hidden');
+        }
+
+        function closeHistoryDrawer() { document.getElementById('history-drawer').classList.add('hidden'); }
+
+        function deleteHistoryItem(id) {
+            try {
+                let history = JSON.parse(localStorage.getItem('chikor_qr_history') || "[]");
+                history = history.filter(h => h.id !== id);
+                localStorage.setItem('chikor_qr_history', JSON.stringify(history));
+                openHistoryDrawer();
+                updateHistoryBadge();
+                showToast("تم حذف العنصر من السجل");
+            } catch(e){}
+        }
+
+        function clearAllHistory() {
+            localStorage.removeItem('chikor_qr_history');
+            openHistoryDrawer();
+            updateHistoryBadge();
+            showToast("تم مسح السجل كاملاً");
+        }
+
+        function downloadHD() {
+            const dotsType = document.getElementById('select-dots-type').value;
+            const cornersSquareType = document.getElementById('select-corners-square').value;
+            const cornersDotType = document.getElementById('select-corners-dot').value;
+            const errorCorrectionLevel = document.getElementById('select-error-level').value;
+            const clearDotsBehind = document.getElementById('clear-dots-behind-logo').checked;
+            const gradType = document.getElementById('gradient-type-select').value;
+            const gradRot = Number(document.getElementById('gradient-rotation').value) || 0;
+
+            let dotsOptions = { type: dotsType };
+            if (isGradient) {
+                dotsOptions.gradient = {
+                    type: gradType,
+                    rotation: gradRot * (Math.PI / 180),
+                    colorStops: [{ offset: 0, color: color1 }, { offset: 1, color: color2 }]
+                };
+            } else {
+                dotsOptions.color = color1;
+            }
+
+            const hdInstance = new QRCodeStyling({
                 width: 1200,
                 height: 1200,
                 type: "canvas",
                 data: toUtf8(currentRawData),
-                dotsOptions: { color: currentCodeColor, type: dotStyle },
-                cornersSquareOptions: { color: currentCodeColor, type: cornerStyle },
-                backgroundOptions: { color: currentBgColor },
-                image: logoSrc,
-                imageOptions: { hideBackgroundDots: true, imageSize: 0.35, margin: 18 }
+                dotsOptions: dotsOptions,
+                cornersSquareOptions: { color: color1, type: cornersSquareType },
+                cornersDotOptions: { color: color1, type: cornersDotType },
+                backgroundOptions: { color: bgColor },
+                qrOptions: { errorCorrectionLevel: errorCorrectionLevel },
+                image: currentLogo,
+                imageOptions: {
+                    hideBackgroundDots: clearDotsBehind,
+                    imageSize: logoSize,
+                    margin: logoMargin * 3
+                }
             });
 
-            hdQr.download({ name: "chikor-studio-qr-HD", extension: "png" });
+            // حفظ صورة في السجل
+            const curCanvas = document.querySelector('#canvas-mount-point canvas');
+            if (curCanvas) saveToHistory(curCanvas.toDataURL());
+
+            hdInstance.download({ name: `chikor-qr-${activeType}-HD`, extension: "png" });
+            showToast("تم تنزيل الصورة فائقة الدقة (1200px)!");
+        }
+
+        function downloadVectorSVG() {
+            qrCode.download({ name: `chikor-vector-qr`, extension: "svg" });
+            showToast("تم تنزيل ملف الفيكتور SVG!");
+        }
+
+        function copyQRToClipboard() {
+            const canvas = document.querySelector('#canvas-mount-point canvas');
+            if (!canvas) return;
+            try {
+                canvas.toBlob(function(blob) {
+                    if (navigator.clipboard && window.ClipboardItem) {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        navigator.clipboard.write([item]).then(() => {
+                            showToast("تم نسخ الصورة إلى الحافظة بنجاح!");
+                        }).catch(() => {
+                            showToast("يرجى الضغط كليك يمين على الصورة ونسخها.");
+                        });
+                    } else {
+                        showToast("المتصفح لا يدعم النسخ المباشر للصور، يرجى التنزيل.");
+                    }
+                });
+            } catch(e) {
+                showToast("تعذر النسخ التلقائي للصور في هذا المتصفح.");
+            }
         }
     </script>
 </body>
 </html>
+```
